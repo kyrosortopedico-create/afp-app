@@ -9,6 +9,17 @@
 </head>
 
 <body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
+  <style>
+    .fade-out {
+      opacity: 0;
+      transition: 0.2s;
+    }
+
+    .fade-in {
+      opacity: 1;
+      transition: 0.2s;
+    }
+  </style>
 
   <div id="loaderScreen" style="
   position:fixed;
@@ -260,7 +271,19 @@
         `;
       }
 
-      contenido.innerHTML = html;
+      cambiarContenidoConFade(html);
+    }
+
+    function cambiarContenidoConFade(nuevoHTML) {
+
+      contenido.classList.add("fade-out");
+
+      setTimeout(() => {
+        contenido.innerHTML = nuevoHTML;
+        contenido.classList.remove("fade-out");
+        contenido.classList.add("fade-in");
+      }, 200);
+
     }
 
     async function cargarEventos() {
@@ -394,7 +417,7 @@
       html += "<button onclick='crearEvento()' style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
       html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
-      contenido.innerHTML = html;
+      cambiarContenidoConFade(html);
     }
 
     function verEvento(e) {
@@ -410,7 +433,7 @@
 
       html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
 
-      contenido.innerHTML = html;
+      cambiarContenidoConFade(html);
     }
 
     async function crearEvento() {
