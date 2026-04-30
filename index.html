@@ -264,51 +264,49 @@
 
      function pantallaCrearEvento() {
 
-       contenido.innerHTML = `
-         <h2>Crear Evento</h2>
+       let html = "";
 
-         <label>Ubicación</label>
-         <select id="ubicacion" style="width:100%; padding:10px; margin-bottom:10px;">
-           <option>Plaza San Miguel</option>
-           <option>Hipodromo</option>
-           <option>Anfiteatro</option>
-           <option>SkatePark</option>
-           <option>Plaza Alberdi</option>
-           <option>Plaza Carbó</option>
-           <option>Plaza Cerrada</option>
-           <option>Plaza San Agustín</option>
-           <option>Plaza Sáenz Peña</option>
-           <option>Plaza 1ro de Mayo</option>
-           <option>Parque Lineal Sur</option>
-           <option>Gazzano</option>
-           <option>Polideportivo AATRA</option>
-         </select>
+       html += "<h2>Crear Evento</h2>";
 
-         <label>Horario</label>
-         <select id="horario" style="width:100%; padding:10px; margin-bottom:10px;">
-           <option>16:00 - 17:00</option>
-           <option>17:00 - 18:00</option>
-           <option>18:00 - 19:00</option>
-           <option>19:00 - 20:00</option>
-         </select>
+       html += "<label>Ubicación</label>";
+       html += "<select id='ubicacion' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<option>Plaza San Miguel</option>";
+       html += "<option>Hipodromo</option>";
+       html += "<option>Anfiteatro</option>";
+       html += "<option>SkatePark</option>";
+       html += "<option>Plaza Alberdi</option>";
+       html += "<option>Plaza Carbó</option>";
+       html += "<option>Plaza Cerrada</option>";
+       html += "<option>Plaza San Agustín</option>";
+       html += "<option>Plaza Sáenz Peña</option>";
+       html += "<option>Plaza 1ro de Mayo</option>";
+       html += "<option>Parque Lineal Sur</option>";
+       html += "<option>Gazzano</option>";
+       html += "<option>Polideportivo AATRA</option>";
+       html += "</select>";
 
-         <label>Modalidad</label>
-         <select id="modalidad" style="width:100%; padding:10px; margin-bottom:10px;">
-           <option>1vs1</option>
-           <option>2vs2</option>
-           <option>3vs3</option>
-           <option>4vs4</option>
-           <option>5vs5</option>
-         </select>
+       html += "<label>Horario</label>";
+       html += "<select id='horario' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<option>16:00 - 17:00</option>";
+       html += "<option>17:00 - 18:00</option>";
+       html += "<option>18:00 - 19:00</option>";
+       html += "<option>19:00 - 20:00</option>";
+       html += "</select>";
 
-         <button style="width:100%; padding:12px; margin-top:10px;">
-           Crear Evento
-         </button>
+       html += "<label>Modalidad</label>";
+       html += "<select id='modalidad' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<option>1vs1</option>";
+       html += "<option>2vs2</option>";
+       html += "<option>3vs3</option>";
+       html += "<option>4vs4</option>";
+       html += "<option>5vs5</option>";
+       html += "</select>";
 
-         <button onclick="cambiarPantalla('inicio')" style="width:100%; padding:10px; margin-top:10px; background:#222;">
-           Volver
-         </button>
-       `;
+       html += "<button style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
+
+       html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
+
+       contenido.innerHTML = html;
      }
 
   </script>
