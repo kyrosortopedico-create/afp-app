@@ -12,15 +12,7 @@
   <style>
     #contenido {
       opacity: 1;
-      transition: opacity 0.25s ease;
-    }
-
-    .fade-out {
-      opacity: 0;
-    }
-
-    .fade-in {
-      opacity: 1;
+      transition: opacity 0.2s ease;
     }
   </style>
 
@@ -279,19 +271,18 @@
 
     function cambiarContenidoConFade(nuevoHTML) {
 
-      contenido.classList.add("fade-out");
+      // fade out
+      contenido.style.opacity = "0";
 
       setTimeout(() => {
+
+        // cambiar contenido
         contenido.innerHTML = nuevoHTML;
 
-        contenido.classList.remove("fade-out");
-        contenido.classList.add("fade-in");
+        // fade in
+        contenido.style.opacity = "1";
 
-        setTimeout(() => {
-          contenido.classList.remove("fade-in");
-        }, 200);
-
-      }, 200);
+      }, 150);
 
     }
 
