@@ -268,6 +268,7 @@
 
        html += "<h2>Crear Evento</h2>";
 
+       // 📍 UBICACION
        html += "<label>Ubicación</label>";
        html += "<select id='ubicacion' style='width:100%; padding:10px; margin-bottom:10px;'>";
        html += "<option>Plaza San Miguel</option>";
@@ -285,6 +286,7 @@
        html += "<option>Polideportivo AATRA</option>";
        html += "</select>";
 
+       // ⏰ HORARIO
        html += "<label>Horario</label>";
        html += "<select id='horario' style='width:100%; padding:10px; margin-bottom:10px;'>";
        html += "<option>16:00 - 17:00</option>";
@@ -293,6 +295,11 @@
        html += "<option>19:00 - 20:00</option>";
        html += "</select>";
 
+       // 📅 FECHA
+       html += "<label>Fecha</label>";
+       html += "<input type='date' id='fecha' style='width:100%; padding:10px; margin-bottom:10px;'>";
+
+       // 🎤 MODALIDAD
        html += "<label>Modalidad</label>";
        html += "<select id='modalidad' style='width:100%; padding:10px; margin-bottom:10px;'>";
        html += "<option>1vs1</option>";
@@ -302,8 +309,28 @@
        html += "<option>5vs5</option>";
        html += "</select>";
 
+       // 💰 PRECIO
+       html += "<label>Inscripción</label>";
+       html += "<select id='precio' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<option>500</option>";
+       html += "<option>1000</option>";
+       html += "<option>1500</option>";
+       html += "<option>2000</option>";
+       html += "<option>2500</option>";
+       html += "<option>3000</option>";
+       html += "</select>";
+
+       // 👤 TIPO (MC o Equipo)
+       html += "<label>Tipo</label>";
+       html += "<select id='tipo' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<option>MC</option>";
+       html += "<option>Equipo</option>";
+       html += "</select>";
+
+       // 🔘 BOTON CREAR
        html += "<button style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
 
+       // 🔙 VOLVER
        html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
        contenido.innerHTML = html;
