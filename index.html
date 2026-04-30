@@ -87,6 +87,7 @@
       pantallaCrearEvento();
     };
     window.crearEvento = crearEvento;
+    window.verEvento = verEvento;
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -262,6 +263,21 @@
     }
 
     async function cargarEventos() {
+    function verEvento(e) {
+
+      let html = "";
+
+      html += "<h2>" + e.ubicacion + "</h2>";
+
+      html += "<p><strong>Fecha:</strong> " + e.fecha + "</p>";
+      html += "<p><strong>Horario:</strong> " + e.horario + "</p>";
+      html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
+      html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
+
+      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
+
+      contenido.innerHTML = html;
+    }
 
       const querySnapshot = await getDocs(collection(db, "eventos"));
 
@@ -281,7 +297,14 @@
 
       eventos.forEach(e => {
         html += `
-          <div style="background:#1a1a1a; padding:15px; margin-bottom:10px; border-radius:10px; text-align:left;">
+          <div onclick='verEvento(${JSON.stringify(e)})' style="
+            background:#1a1a1a;
+            padding:15px;
+            margin-bottom:10px;
+            border-radius:10px;
+            text-align:left;
+            cursor:pointer;
+          ">
             <strong>${e.ubicacion}</strong><br>
             ${e.fecha} — ${e.horario}<br>
             ${e.modalidad} | ${e.inscripcion} ${e.tipo}
