@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AFP Organizadores</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
+
+  <!-- HEADER -->
+  <div style="padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="margin:0;">AFP</h2>
+    <span id="usernameDisplay" style="font-size:14px;"></span>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div id="contenido" style="padding:20px; text-align:center;">
+    <p>Cargando...</p>
+  </div>
+
+  <!-- MENÚ -->
+  <div id="menu" style="
+    position:fixed;
+    bottom:0;
+    width:100%;
+    display:none;
+    justify-content:space-around;
+    background:#111;
+    padding:10px 0;
+    border-top:1px solid #222;
+  ">
+    <div onclick="cambiarPantalla('inicio')">Inicio</div>
+    <div onclick="cambiarPantalla('eventos')">Eventos</div>
+    <div onclick="cambiarPantalla('organizadores')">Organizadores</div>
+  </div>
+
+  <script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCueKXS0FR-MRDDqcJCanVBl_U4w11FJmg",
+      authDomain: "afp-app-3fdf1.firebaseapp.com",
+      projectId: "afp-app-3fdf1",
+      storageBucket: "afp-app-3fdf1.firebasestorage.app",
+      messagingSenderId: "274409312091",
+      appId: "1:274409312091:web:ea848342cbe7b41a7c947e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const contenido = document.getElementById("contenido");
+    const menu = document.getElementById("menu");
+
+    // HACER FUNCIONES GLOBALES
+    window.mostrarLogin = mostrarLogin;
+    window.mostrarRegistro = mostrarRegistro;
+    window.registrar = registrar;
+    window.login = login;
+    window.cambiarPantalla = cambiarPantalla;
+
+    // 🔥 CONTROL DE SESIÓN LIMPIO
+    onAuthStateChanged(auth, async (user) => {
+
+      if (user) {
+
+        menu.style.display = "flex";
+
+        const docRef = doc(db, "usuarios", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          document.getElementById("usernameDisplay").innerText = docSnap.data().username;
+        }
+
+        cambiarPantalla("inicio");
+
+      } else {
+
+        menu.style.display = "none";
+
+        contenido.innerHTML = `
+          <h2>Bienvenido</h2>
+
+          <button onclick="mostrarLogin()" style="width:100%; padding:12px; margin-bottom:10px;">
+            Iniciar Sesión
+          </button>
+
+          <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">
+            Registrarse
+          </button>
+        `;
+      }
+
+    });
+
+    function mostrarLogin() {
+      contenido.innerHTML = `
+        <h3>Iniciar Sesión</h3>
+
+        <input id="loginEmail" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="loginPassword" type="password" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+
+        <button onclick="login()" style="width:100%; padding:10px;">Entrar</button>
+      `;
+    }
+
+    function mostrarRegistro() {
+      contenido.innerHTML = `
+        <h3>Registrarse</h3>
+
+        <input id="registerUsername" placeholder="Nombre de usuario" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="registerEmail" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="registerPassword" type="password" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="registerPassword2" type="password" placeholder="Repetir contraseña" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+
+        <button onclick="registrar()" style="width:100%; padding:10px;">Crear cuenta</button>
+
+        <p id="mensajeRegistro"></p>
+      `;
+    }
+
+    async function registrar() {
+
+      const username = document.getElementById("registerUsername").value;
+      const email = document.getElementById("registerEmail").value;
+      const pass = document.getElementById("registerPassword").value;
+      const pass2 = document.getElementById("registerPassword2").value;
+      const mensaje = document.getElementById("mensajeRegistro");
+
+      mensaje.innerText = "Creando cuenta...";
+      mensaje.style.color = "yellow";
+
+      if (pass !== pass2) {
+        mensaje.innerText = "Las contraseñas no coinciden";
+        mensaje.style.color = "red";
+        return;
+      }
+
+      try {
+
+        const snapshot = await getDocs(collection(db, "usuarios"));
+        let existe = false;
+
+        snapshot.forEach(d => {
+          if (d.data().username === username) existe = true;
+        });
+
+        if (existe) {
+          mensaje.innerText = "Nombre de usuario ya usado";
+          mensaje.style.color = "red";
+          return;
+        }
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+
+        await setDoc(doc(db, "usuarios", userCredential.user.uid), {
+          username,
+          email,
+          rol: "publico"
+        });
+
+        await auth.signOut();
+
+        let t = 5;
+        mensaje.style.color = "lightgreen";
+
+        const i = setInterval(() => {
+          mensaje.innerText = `Cuenta creada con éxito, espere (${t})`;
+          t--;
+
+          if (t < 0) {
+            clearInterval(i);
+            mostrarLogin();
+          }
+
+        }, 1000);
+
+      } catch (error) {
+
+        if (error.code === "auth/email-already-in-use") {
+          mensaje.innerText = "Correo ya usado";
+        } else {
+          mensaje.innerText = error.message;
+        }
+
+        mensaje.style.color = "red";
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("loginEmail").value;
+      const pass = document.getElementById("loginPassword").value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function cambiarPantalla(p) {
+      if (p === "inicio") contenido.innerHTML = "Bienvenido";
+      if (p === "eventos") contenido.innerHTML = "Eventos";
+      if (p === "organizadores") contenido.innerHTML = "Organizadores";
+    }
+
+  </script>
+
+</body>
+
+</html>
