@@ -57,7 +57,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCueKXS0FR-MRDDqcJCanVBl_U4w11FJmg",
@@ -325,11 +325,42 @@
 
        html += "</div>";
 
-       html += "<button style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
+       html += "<button onclick='crearEvento()' style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
 
        html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
        contenido.innerHTML = html;
+     }
+     
+     async function crearEvento() {
+
+       const ubicacion = document.getElementById("ubicacion").value;
+       const horario = document.getElementById("horario").value;
+       const fecha = document.getElementById("fecha").value;
+       const modalidad = document.getElementById("modalidad").value;
+       const inscripcion = document.getElementById("inscripcion").value;
+       const tipo = document.getElementById("tipo").value;
+
+       try {
+
+         await addDoc(collection(db, "eventos"), {
+           ubicacion,
+           horario,
+           fecha,
+           modalidad,
+           inscripcion,
+           tipo,
+           creado: Date.now()
+         });
+
+         alert("Evento creado correctamente");
+
+         cambiarPantalla("inicio");
+
+       } catch (error) {
+         alert("Error al crear evento");
+         console.error(error);
+       }
      }
 
   </script>
