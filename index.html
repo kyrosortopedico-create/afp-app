@@ -78,15 +78,17 @@
     const loader = document.getElementById("loaderScreen");
     let usuarioActual = null;
 
-    // 🔥 HACER TODO GLOBAL (CLAVE)
+    // HACER FUNCIONES GLOBALES
     window.mostrarLogin = mostrarLogin;
     window.mostrarRegistro = mostrarRegistro;
     window.registrar = registrar;
     window.login = login;
     window.cambiarPantalla = cambiarPantalla;
-    window.pantallaCrearEvento = pantallaCrearEvento;
+    window.pantallaCrearEvento = function() {
+      pantallaCrearEvento();
+    };
 
-    // 🔥 CONTROL DE SESIÓN
+    // 🔥 CONTROL DE SESIÓN LIMPIO (ARREGLADO)
     onAuthStateChanged(auth, async (user) => {
 
       if (user) {
@@ -96,7 +98,9 @@
 
         if (docSnap.exists()) {
           const data = docSnap.data();
+
           usuarioActual = data;
+
           document.getElementById("usernameDisplay").innerText = data.username;
         }
 
@@ -120,6 +124,7 @@
         menu.style.display = "none";
       }
 
+      // 🔥 MOSTRAR UI SOLO AL FINAL
       loader.style.display = "none";
       header.style.display = "flex";
       contenido.style.display = "block";
@@ -239,6 +244,7 @@
           <p>Lista de eventos próximamente</p>
         `;
 
+        // 🔥 SOLO ORGANIZADOR VE ESTO
         if (usuarioActual && usuarioActual.rol === "organizador") {
           html += `
             <button onclick="pantallaCrearEvento()" style="width:100%; padding:12px; margin-top:15px;">
@@ -249,29 +255,61 @@
 
         contenido.innerHTML = html;
       }
-
       if (p === "eventos") contenido.innerHTML = "Eventos";
       if (p === "organizadores") contenido.innerHTML = "Organizadores";
     }
 
-    function pantallaCrearEvento() {
+     function pantallaCrearEvento() {
 
-      contenido.innerHTML = `
-        <h2>Crear Evento</h2>
+       contenido.innerHTML = `
+         <h2>Crear Evento</h2>
 
-        <label>Ubicación</label>
-        <select style="width:100%; padding:10px; margin-bottom:10px;">
-          <option>Plaza San Miguel</option>
-          <option>Hipodromo</option>
-        </select>
+         <label>Ubicación</label>
+         <select id="ubicacion" style="width:100%; padding:10px; margin-bottom:10px;">
+           <option>Plaza San Miguel</option>
+           <option>Hipodromo</option>
+           <option>Anfiteatro</option>
+           <option>SkatePark</option>
+           <option>Plaza Alberdi</option>
+           <option>Plaza Carbó</option>
+           <option>Plaza Cerrada</option>
+           <option>Plaza San Agustín</option>
+           <option>Plaza Sáenz Peña</option>
+           <option>Plaza 1ro de Mayo</option>
+           <option>Parque Lineal Sur</option>
+           <option>Gazzano</option>
+           <option>Polideportivo AATRA</option>
+         </select>
 
-        <button onclick="cambiarPantalla('inicio')" style="width:100%; padding:10px;">
-          Volver
-        </button>
-      `;
-    }
+         <label>Horario</label>
+         <select id="horario" style="width:100%; padding:10px; margin-bottom:10px;">
+           <option>16:00 - 17:00</option>
+           <option>17:00 - 18:00</option>
+           <option>18:00 - 19:00</option>
+           <option>19:00 - 20:00</option>
+         </select>
+
+         <label>Modalidad</label>
+         <select id="modalidad" style="width:100%; padding:10px; margin-bottom:10px;">
+           <option>1vs1</option>
+           <option>2vs2</option>
+           <option>3vs3</option>
+           <option>4vs4</option>
+           <option>5vs5</option>
+         </select>
+
+         <button style="width:100%; padding:12px; margin-top:10px;">
+           Crear Evento
+         </button>
+
+         <button onclick="cambiarPantalla('inicio')" style="width:100%; padding:10px; margin-top:10px; background:#222;">
+           Volver
+         </button>
+       `;
+     }
 
   </script>
 
 </body>
+
 </html>
