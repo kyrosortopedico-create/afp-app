@@ -304,53 +304,79 @@
       if (eventos.length === 0) {
         html += "<p>No hay eventos todavía</p>";
       }
-
       eventos.forEach(e => {
         html += `
     <div onclick='verEvento(${JSON.stringify(e)})' style="
-      background:linear-gradient(135deg, #1a1a1a, #111);
-      padding:15px;
-      margin-bottom:12px;
-      border-radius:14px;
-      text-align:left;
+      position:relative;
+      overflow:hidden;
+      border-radius:16px;
+      margin-bottom:14px;
       cursor:pointer;
-      box-shadow:0 4px 10px rgba(0,0,0,0.4);
-      transition:0.2s;
+      background:#0f0f0f;
+      box-shadow:0 6px 20px rgba(0,0,0,0.6);
     ">
 
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <div style="
-          width:10px;
-          height:10px;
-          border-radius:50%;
-          background:${e.color};
-        "></div>
+      <!-- BARRA DE COLOR -->
+      <div style="
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        width:6px;
+        background:${e.color};
+      "></div>
 
-        <div style="font-size:13px; font-weight:bold;">
+      <!-- CONTENIDO -->
+      <div style="padding:16px; margin-left:6px;">
+
+        <!-- COMPETENCIA -->
+        <div style="
+          font-size:12px;
+          font-weight:bold;
+          color:${e.color};
+          margin-bottom:6px;
+          letter-spacing:0.5px;
+        ">
           ${e.competencia}
         </div>
-      </div>
 
-      <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">
-        ${e.ubicacion}
-      </div>
+        <!-- UBICACION -->
+        <div style="
+          font-size:17px;
+          font-weight:bold;
+          margin-bottom:6px;
+        ">
+          ${e.ubicacion}
+        </div>
 
-      <div style="font-size:13px; color:#aaa;">
-         ${e.fecha}
-      </div>
+        <!-- INFO -->
+        <div style="font-size:13px; color:#aaa;">
+          ${e.fecha} • ${e.horario}
+        </div>
 
-      <div style="font-size:13px; color:#aaa;">
-         ${e.horario}
-      </div>
+        <!-- TAGS -->
+        <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
 
-      <div style="margin-top:8px; font-size:13px;">
-        <span style="background:#222; padding:4px 8px; border-radius:6px;">
-          ${e.modalidad}
-        </span>
+          <span style="
+            background:#1f1f1f;
+            padding:4px 8px;
+            border-radius:6px;
+            font-size:12px;
+          ">
+            ${e.modalidad}
+          </span>
 
-        <span style="margin-left:6px; background:#222; padding:4px 8px; border-radius:6px;">
-          ${e.inscripcion} ${e.tipo}
-        </span>
+          <span style="
+            background:#1f1f1f;
+            padding:4px 8px;
+            border-radius:6px;
+            font-size:12px;
+          ">
+            ${e.inscripcion} ${e.tipo}
+          </span>
+
+        </div>
+
       </div>
 
     </div>
