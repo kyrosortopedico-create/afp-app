@@ -10,7 +10,7 @@
 
 <body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
 
-  <div id="loaderScreen" style="
+<div id="loaderScreen" style="
   position:fixed;
   top:0;
   left:0;
@@ -23,29 +23,31 @@
   z-index:9999;
   font-size:18px;
 ">
-    Cargando...
-  </div>
+  Cargando...
+</div>
 
-  <div id="header"
-    style="display:none; padding:15px; border-bottom:1px solid #222; justify-content:space-between; align-items:center;">
+  <!-- HEADER -->
+  <div id="header" style="display:none; padding:15px; border-bottom:1px solid #222; justify-content:space-between; align-items:center;">
     <h2 style="margin:0;">AFP</h2>
     <span id="usernameDisplay" style="font-size:14px;"></span>
   </div>
 
-  <div id="contenido" style="display:none; padding:20px; text-align:center; padding-bottom:80px;">
+  <!-- CONTENIDO -->
+  <div id="contenido" style="display:none; padding:20px; text-align:center;">
     <p>Cargando...</p>
   </div>
 
+  <!-- MENÚ -->
   <div id="menu" style="
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:none;
-  justify-content:space-around;
-  background:#111;
-  padding:10px 0;
-  border-top:1px solid #222;
-">
+    position:fixed;
+    bottom:0;
+    width:100%;
+    display:none;
+    justify-content:space-around;
+    background:#111;
+    padding:10px 0;
+    border-top:1px solid #222;
+  ">
     <div onclick="cambiarPantalla('inicio')">Inicio</div>
     <div onclick="cambiarPantalla('eventos')">Eventos</div>
     <div onclick="cambiarPantalla('organizadores')">Organizadores</div>
@@ -76,8 +78,12 @@
     const loader = document.getElementById("loaderScreen");
     let usuarioActual = null;
 
+    window.mostrarLogin = mostrarLogin;
+    window.mostrarRegistro = mostrarRegistro;
+    window.registrar = registrar;
+    window.login = login;
     window.cambiarPantalla = cambiarPantalla;
-    window.pantallaCrearEvento = function () {
+    window.pantallaCrearEvento = function() {
       pantallaCrearEvento();
     };
     window.crearEvento = crearEvento;
@@ -85,40 +91,143 @@
 
     onAuthStateChanged(auth, async (user) => {
 
-      if (user) {
-        try {
-          const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+      try {
+
+        if (user) {
+
+          const docRef = doc(db, "usuarios", user.uid);
+          const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
-            usuarioActual = docSnap.data();
-            document.getElementById("usernameDisplay").innerText = usuarioActual.username;
+            const data = docSnap.data();
+            usuarioActual = data;
+            document.getElementById("usernameDisplay").innerText = data.username;
           }
 
           cambiarPantalla("inicio");
           menu.style.display = "flex";
 
-        } catch (error) {
-          console.error("Error usuario:", error);
-          contenido.innerHTML = "<p>Error cargando usuario</p>";
+        } else {
+
+          contenido.innerHTML = `
+            <h2>Bienvenido</h2>
+
+            <button onclick="mostrarLogin()" style="width:100%; padding:12px; margin-bottom:10px;">
+              Iniciar Sesión
+            </button>
+
+            <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">
+              Registrarse
+            </button>
+          `;
+
+          menu.style.display = "none";
         }
 
-      } else {
-
-        contenido.innerHTML = `
-      <h2>Bienvenido</h2>
-      <button onclick="mostrarLogin()" style="width:100%; padding:12px;">Iniciar Sesión</button>
-      <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">Registrarse</button>
-    `;
-
-        menu.style.display = "none";
+      } catch (error) {
+        console.error("Error de sesión:", error);
+        contenido.innerHTML = "<p>Error cargando la app</p>";
       }
 
-      // 🔥 SIEMPRE SE EJECUTA
+      // 🔥 ESTO SIEMPRE SE EJECUTA
       loader.style.display = "none";
       header.style.display = "flex";
       contenido.style.display = "block";
 
     });
+
+    function mostrarLogin() {
+      contenido.innerHTML = `
+        <h3>Iniciar Sesión</h3>
+        <input id="loginEmail" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="loginPassword" type="password" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <button onclick="login()" style="width:100%; padding:10px;">Entrar</button>
+      `;
+    }
+
+    function mostrarRegistro() {
+      contenido.innerHTML = `
+        <h3>Registrarse</h3>
+        <input id="registerUsername" placeholder="Nombre de usuario" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="registerEmail" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="registerPassword" type="password" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="registerPassword2" type="password" placeholder="Repetir contraseña" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <button onclick="registrar()" style="width:100%; padding:10px;">Crear cuenta</button>
+        <p id="mensajeRegistro"></p>
+      `;
+    }
+
+    async function registrar() {
+      const username = document.getElementById("registerUsername").value;
+      const email = document.getElementById("registerEmail").value;
+      const pass = document.getElementById("registerPassword").value;
+      const pass2 = document.getElementById("registerPassword2").value;
+      const mensaje = document.getElementById("mensajeRegistro");
+
+      mensaje.innerText = "Creando cuenta...";
+      mensaje.style.color = "yellow";
+
+      if (pass !== pass2) {
+        mensaje.innerText = "Las contraseñas no coinciden";
+        mensaje.style.color = "red";
+        return;
+      }
+
+      try {
+        const snapshot = await getDocs(collection(db, "usuarios"));
+        let existe = false;
+
+        snapshot.forEach(d => {
+          if (d.data().username === username) existe = true;
+        });
+
+        if (existe) {
+          mensaje.innerText = "Nombre de usuario ya usado";
+          mensaje.style.color = "red";
+          return;
+        }
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+
+        await setDoc(doc(db, "usuarios", userCredential.user.uid), {
+          username,
+          email,
+          rol: "publico"
+        });
+
+        await auth.signOut();
+
+        let t = 5;
+        mensaje.style.color = "lightgreen";
+
+        const i = setInterval(() => {
+          mensaje.innerText = `Cuenta creada con éxito, espere (${t})`;
+          t--;
+          if (t < 0) {
+            clearInterval(i);
+            mostrarLogin();
+          }
+        }, 1000);
+
+      } catch (error) {
+        mensaje.innerText = error.code === "auth/email-already-in-use"
+          ? "Correo ya usado"
+          : error.message;
+        mensaje.style.color = "red";
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("loginEmail").value;
+      const pass = document.getElementById("loginPassword").value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        setTimeout(() => cambiarPantalla("inicio"), 500);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
 
     function cambiarPantalla(p) {
 
@@ -137,9 +246,38 @@
         return;
       }
 
+      let html = `
+        <h2>Eventos</h2>
+        <p>Lista de eventos próximamente</p>
+      `;
+
+      if (usuarioActual && usuarioActual.rol === "organizador") {
+        html += `
+          <button onclick="pantallaCrearEvento()" style="width:100%; padding:12px; margin-top:15px;">
+            Crear Evento
+          </button>
+        `;
+      }
+
+      contenido.innerHTML = html;
     }
 
     async function cargarEventos() {
+    function verEvento(e) {
+
+      let html = "";
+
+      html += "<h2>" + e.ubicacion + "</h2>";
+
+      html += "<p><strong>Fecha:</strong> " + e.fecha + "</p>";
+      html += "<p><strong>Horario:</strong> " + e.horario + "</p>";
+      html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
+      html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
+
+      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
+
+      contenido.innerHTML = html;
+    }
 
       const querySnapshot = await getDocs(collection(db, "eventos"));
 
@@ -153,41 +291,34 @@
 
       let html = "<h2>Eventos</h2>";
 
+      if (eventos.length === 0) {
+        html += "<p>No hay eventos todavía</p>";
+      }
+
       eventos.forEach(e => {
         html += `
-      <div onclick='verEvento(${JSON.stringify(e)})' style="
-        background:#1a1a1a;
-        padding:15px;
-        margin-bottom:10px;
-        border-radius:10px;
-        text-align:left;
-        cursor:pointer;
-      ">
-        <strong>${e.ubicacion}</strong><br>
-        ${e.fecha} — ${e.horario}<br>
-        ${e.modalidad} | ${e.inscripcion} ${e.tipo}
-      </div>
-    `;
+          <div onclick='verEvento(${JSON.stringify(e)})' style="
+            background:#1a1a1a;
+            padding:15px;
+            margin-bottom:10px;
+            border-radius:10px;
+            text-align:left;
+            cursor:pointer;
+          ">
+            <strong>${e.ubicacion}</strong><br>
+            ${e.fecha} — ${e.horario}<br>
+            ${e.modalidad} | ${e.inscripcion} ${e.tipo}
+          </div>
+        `;
       });
 
       if (usuarioActual && usuarioActual.rol === "organizador") {
-        html += `<button onclick="pantallaCrearEvento()" style="width:100%; padding:12px; margin-top:15px;">Crear Evento</button>`;
+        html += `
+          <button onclick="pantallaCrearEvento()" style="width:100%; padding:12px; margin-top:15px;">
+            Crear Evento
+          </button>
+        `;
       }
-
-      contenido.innerHTML = html;
-    }
-
-    function verEvento(e) {
-
-      let html = "";
-
-      html += "<h2>" + e.ubicacion + "</h2>";
-      html += "<p><strong>Fecha:</strong> " + e.fecha + "</p>";
-      html += "<p><strong>Horario:</strong> " + e.horario + "</p>";
-      html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
-      html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
-
-      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
 
       contenido.innerHTML = html;
     }
@@ -197,20 +328,63 @@
       let html = "";
 
       html += "<h2>Crear Evento</h2>";
-
-      html += "<label>Fecha</label>";
-      html += "<input type='date' id='fecha' style='width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;'>";
-
       html += "<label>Ubicación</label>";
-      html += "<select id='ubicacion' style='width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;'>";
-
+      html += "<select id='ubicacion' style='width:100%; padding:10px; margin-bottom:10px;'>";
       html += "<option>Plaza San Miguel</option>";
       html += "<option>Hipodromo</option>";
-
+      html += "<option>Anfiteatro</option>";
+      html += "<option>SkatePark</option>";
+      html += "<option>Plaza Alberdi</option>";
+      html += "<option>Plaza Carbó</option>";
+      html += "<option>Plaza Cerrada</option>";
+      html += "<option>Plaza San Agustín</option>";
+      html += "<option>Plaza Sáenz Peña</option>";
+      html += "<option>Plaza 1ro de Mayo</option>";
+      html += "<option>Parque Lineal Sur</option>";
+      html += "<option>Gazzano</option>";
+      html += "<option>Polideportivo AATRA</option>";
       html += "</select>";
 
-      html += "<button onclick='crearEvento()' style='width:100%; padding:12px;'>Crear</button>";
-      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px;'>Volver</button>";
+      html += "<label>Horario</label>";
+      html += "<select id='horario' style='width:100%; padding:10px; margin-bottom:10px;'>";
+      html += "<option>16:00 - 17:00</option>";
+      html += "<option>17:00 - 18:00</option>";
+      html += "<option>18:00 - 19:00</option>";
+      html += "<option>19:00 - 20:00</option>";
+      html += "</select>";
+
+      html += "<label>Fecha</label>";
+      html += "<input type='date' id='fecha' style='width:100%; padding:10px; margin-bottom:10px;'>";
+
+      html += "<label>Modalidad</label>";
+      html += "<select id='modalidad' style='width:100%; padding:10px; margin-bottom:10px;'>";
+      html += "<option>1vs1</option>";
+      html += "<option>2vs2</option>";
+      html += "<option>3vs3</option>";
+      html += "<option>4vs4</option>";
+      html += "<option>5vs5</option>";
+      html += "</select>";
+
+      html += "<label>Inscripción</label>";
+      html += "<div style='display:flex; gap:10px; margin-bottom:10px;'>";
+
+      html += "<select id='inscripcion' style='width:65%; padding:10px;'>";
+      html += "<option>500</option>";
+      html += "<option>1000</option>";
+      html += "<option>1500</option>";
+      html += "<option>2000</option>";
+      html += "<option>2500</option>";
+      html += "</select>";
+
+      html += "<select id='tipo' style='width:35%; padding:10px;'>";
+      html += "<option>MC</option>";
+      html += "<option>Equipo</option>";
+      html += "</select>";
+
+      html += "</div>";
+
+      html += "<button onclick='crearEvento()' style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
+      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
       contenido.innerHTML = html;
     }
@@ -218,34 +392,33 @@
     async function crearEvento() {
 
       const ubicacion = document.getElementById("ubicacion").value;
+      const horario = document.getElementById("horario").value;
       const fecha = document.getElementById("fecha").value;
-
-      if (!fecha) {
-        alert("Seleccioná una fecha");
-        return;
-      }
+      const modalidad = document.getElementById("modalidad").value;
+      const inscripcion = document.getElementById("inscripcion").value;
+      const tipo = document.getElementById("tipo").value;
 
       try {
-
         await addDoc(collection(db, "eventos"), {
           ubicacion,
+          horario,
           fecha,
-          horario: "Sin definir",
-          modalidad: "Sin definir",
-          inscripcion: "0",
-          tipo: "-"
+          modalidad,
+          inscripcion,
+          tipo,
+          creado: Date.now()
         });
 
+        alert("Evento creado correctamente");
         cambiarPantalla("inicio");
 
       } catch (error) {
-        console.error(error);
         alert("Error al crear evento");
+        console.error(error);
       }
     }
 
   </script>
 
 </body>
-
 </html>
