@@ -90,37 +90,45 @@
 
     onAuthStateChanged(auth, async (user) => {
 
-      if (user) {
+      try {
 
-        const docRef = doc(db, "usuarios", user.uid);
-        const docSnap = await getDoc(docRef);
+        if (user) {
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          usuarioActual = data;
-          document.getElementById("usernameDisplay").innerText = data.username;
+          const docRef = doc(db, "usuarios", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            usuarioActual = data;
+            document.getElementById("usernameDisplay").innerText = data.username;
+          }
+
+          cambiarPantalla("inicio");
+          menu.style.display = "flex";
+
+        } else {
+
+          contenido.innerHTML = `
+            <h2>Bienvenido</h2>
+
+            <button onclick="mostrarLogin()" style="width:100%; padding:12px; margin-bottom:10px;">
+              Iniciar Sesión
+            </button>
+
+            <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">
+              Registrarse
+            </button>
+          `;
+
+          menu.style.display = "none";
         }
 
-        cambiarPantalla("inicio");
-        menu.style.display = "flex";
-
-      } else {
-
-        contenido.innerHTML = `
-          <h2>Bienvenido</h2>
-
-          <button onclick="mostrarLogin()" style="width:100%; padding:12px; margin-bottom:10px;">
-            Iniciar Sesión
-          </button>
-
-          <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">
-            Registrarse
-          </button>
-        `;
-
-        menu.style.display = "none";
+      } catch (error) {
+        console.error("Error de sesión:", error);
+        contenido.innerHTML = "<p>Error cargando la app</p>";
       }
 
+      // 🔥 ESTO SIEMPRE SE EJECUTA
       loader.style.display = "none";
       header.style.display = "flex";
       contenido.style.display = "block";
