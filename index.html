@@ -10,7 +10,7 @@
 
 <body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
 
-<div id="loaderScreen" style="
+  <div id="loaderScreen" style="
   position:fixed;
   top:0;
   left:0;
@@ -23,11 +23,12 @@
   z-index:9999;
   font-size:18px;
 ">
-  Cargando...
-</div>
+    Cargando...
+  </div>
 
   <!-- HEADER -->
-  <div id="header" style="display:none; padding:15px; border-bottom:1px solid #222; justify-content:space-between; align-items:center;">
+  <div id="header"
+    style="display:none; padding:15px; border-bottom:1px solid #222; justify-content:space-between; align-items:center;">
     <h2 style="margin:0;">AFP</h2>
     <span id="usernameDisplay" style="font-size:14px;"></span>
   </div>
@@ -83,7 +84,7 @@
     window.registrar = registrar;
     window.login = login;
     window.cambiarPantalla = cambiarPantalla;
-    window.pantallaCrearEvento = function() {
+    window.pantallaCrearEvento = function () {
       pantallaCrearEvento();
     };
     window.crearEvento = crearEvento;
@@ -263,21 +264,6 @@
     }
 
     async function cargarEventos() {
-    function verEvento(e) {
-
-      let html = "";
-
-      html += "<h2>" + e.ubicacion + "</h2>";
-
-      html += "<p><strong>Fecha:</strong> " + e.fecha + "</p>";
-      html += "<p><strong>Horario:</strong> " + e.horario + "</p>";
-      html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
-      html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
-
-      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
-
-      contenido.innerHTML = html;
-    }
 
       const querySnapshot = await getDocs(collection(db, "eventos"));
 
@@ -389,6 +375,22 @@
       contenido.innerHTML = html;
     }
 
+    function verEvento(e) {
+
+      let html = "";
+
+      html += "<h2>" + e.ubicacion + "</h2>";
+
+      html += "<p><strong>Fecha:</strong> " + e.fecha + "</p>";
+      html += "<p><strong>Horario:</strong> " + e.horario + "</p>";
+      html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
+      html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
+
+      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
+
+      contenido.innerHTML = html;
+    }
+
     async function crearEvento() {
 
       const ubicacion = document.getElementById("ubicacion").value;
@@ -421,4 +423,5 @@
   </script>
 
 </body>
+
 </html>
