@@ -425,14 +425,73 @@
 
       let html = "";
 
-      html += "<h2>" + e.ubicacion + "</h2>";
+      html += `
+    <div style="
+      background:linear-gradient(180deg, #1a1a1a, #0f0f0f);
+      padding:20px;
+      border-radius:16px;
+      text-align:left;
+      box-shadow:0 6px 20px rgba(0,0,0,0.5);
+    ">
+  `;
 
-      html += "<p><strong>Fecha:</strong> " + e.fecha + "</p>";
-      html += "<p><strong>Horario:</strong> " + e.horario + "</p>";
-      html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
-      html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
+      html += `
+    <div style="font-size:22px; font-weight:bold; margin-bottom:10px;">
+      ${e.ubicacion}
+    </div>
+  `;
 
-      html += "<button onclick=\"volverInicio()\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
+      html += `
+    <div style="font-size:14px; color:#aaa; margin-bottom:5px;">
+      📅 ${e.fecha}
+    </div>
+  `;
+
+      html += `
+    <div style="font-size:14px; color:#aaa; margin-bottom:10px;">
+      ⏰ ${e.horario}
+    </div>
+  `;
+
+      html += `
+    <div style="margin-bottom:15px;">
+      <span style="
+        background:#222;
+        padding:6px 10px;
+        border-radius:8px;
+        font-size:13px;
+        margin-right:6px;
+      ">
+        ${e.modalidad}
+      </span>
+
+      <span style="
+        background:#222;
+        padding:6px 10px;
+        border-radius:8px;
+        font-size:13px;
+      ">
+        ${e.inscripcion} ${e.tipo}
+      </span>
+    </div>
+  `;
+
+      html += `
+    <button onclick="volverInicio()" style="
+      width:100%;
+      padding:12px;
+      background:#fff;
+      color:#000;
+      border:none;
+      border-radius:10px;
+      font-weight:bold;
+      margin-top:10px;
+    ">
+      Volver
+    </button>
+  `;
+
+      html += `</div>`;
 
       cambiarContenidoConFade(html);
     }
