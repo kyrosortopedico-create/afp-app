@@ -76,6 +76,7 @@
     const menu = document.getElementById("menu");
     const header = document.getElementById("header");
     const loader = document.getElementById("loaderScreen");
+    let usuarioActual = null;
 
     // HACER FUNCIONES GLOBALES
     window.mostrarLogin = mostrarLogin;
@@ -93,7 +94,11 @@
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          document.getElementById("usernameDisplay").innerText = docSnap.data().username;
+          const data = docSnap.data();
+
+          usuarioActual = data;
+
+          document.getElementById("usernameDisplay").innerText = data.username;
         }
 
         cambiarPantalla("inicio");
@@ -229,7 +234,24 @@
     }
 
     function cambiarPantalla(p) {
-      if (p === "inicio") contenido.innerHTML = "Bienvenido";
+      if (p === "inicio") {
+
+        let html = `
+          <h2>Eventos</h2>
+          <p>Lista de eventos próximamente</p>
+        `;
+
+        // 🔥 SOLO ORGANIZADOR VE ESTO
+        if (usuarioActual && usuarioActual.rol === "organizador") {
+          html += `
+            <button style="width:100%; padding:12px; margin-top:15px;">
+              Crear Evento
+            </button>
+          `;
+        }
+
+        contenido.innerHTML = html;
+      }
       if (p === "eventos") contenido.innerHTML = "Eventos";
       if (p === "organizadores") contenido.innerHTML = "Organizadores";
     }
