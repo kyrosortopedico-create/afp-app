@@ -76,14 +76,15 @@
     const loader = document.getElementById("loaderScreen");
     let usuarioActual = null;
 
-    window.mostrarLogin = mostrarLogin;
+    wwindow.mostrarLogin = mostrarLogin;
     window.mostrarRegistro = mostrarRegistro;
     window.registrar = registrar;
     window.login = login;
     window.cambiarPantalla = cambiarPantalla;
-    window.pantallaCrearEvento = () => pantallaCrearEvento();
+    window.pantallaCrearEvento = function () {
+      pantallaCrearEvento();
+    };
     window.crearEvento = crearEvento;
-    window.verEvento = verEvento;
 
     onAuthStateChanged(auth, async (user) => {
 
