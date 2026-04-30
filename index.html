@@ -10,14 +10,17 @@
 
 <body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
   <style>
+    #contenido {
+      opacity: 1;
+      transition: opacity 0.25s ease;
+    }
+
     .fade-out {
       opacity: 0;
-      transition: 0.2s;
     }
 
     .fade-in {
       opacity: 1;
-      transition: 0.2s;
     }
   </style>
 
@@ -280,8 +283,14 @@
 
       setTimeout(() => {
         contenido.innerHTML = nuevoHTML;
+
         contenido.classList.remove("fade-out");
         contenido.classList.add("fade-in");
+
+        setTimeout(() => {
+          contenido.classList.remove("fade-in");
+        }, 200);
+
       }, 200);
 
     }
