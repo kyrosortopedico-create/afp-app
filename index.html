@@ -231,6 +231,9 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, pass);
+        setTimeout(() => {
+          cambiarPantalla("inicio");
+        }, 500);
       } catch (error) {
         alert(error.message);
       }
@@ -245,7 +248,7 @@
         `;
 
         // 🔥 SOLO ORGANIZADOR VE ESTO
-        if (usuarioActual && usuarioActual.rol === "organizador") {
+        if (usuarioActual && usuarioActual.rol && usuarioActual.rol === "organizador") {
           html += `
             <button onclick="pantallaCrearEvento()" style="width:100%; padding:12px; margin-top:15px;">
               Crear Evento
