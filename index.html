@@ -283,19 +283,41 @@
 
       eventos.forEach(e => {
         html += `
-          <div onclick='verEvento(${JSON.stringify(e)})' style="
-            background:#1a1a1a;
-            padding:15px;
-            margin-bottom:10px;
-            border-radius:10px;
-            text-align:left;
-            cursor:pointer;
-          ">
-            <strong>${e.ubicacion}</strong><br>
-            ${e.fecha} — ${e.horario}<br>
-            ${e.modalidad} | ${e.inscripcion} ${e.tipo}
-          </div>
-        `;
+    <div onclick='verEvento(${JSON.stringify(e)})' style="
+      background:linear-gradient(135deg, #1a1a1a, #111);
+      padding:15px;
+      margin-bottom:12px;
+      border-radius:14px;
+      text-align:left;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,0.4);
+      transition:0.2s;
+    ">
+
+      <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">
+        ${e.ubicacion}
+      </div>
+
+      <div style="font-size:13px; color:#aaa;">
+        📅 ${e.fecha}
+      </div>
+
+      <div style="font-size:13px; color:#aaa;">
+        ⏰ ${e.horario}
+      </div>
+
+      <div style="margin-top:8px; font-size:13px;">
+        <span style="background:#222; padding:4px 8px; border-radius:6px;">
+          ${e.modalidad}
+        </span>
+
+        <span style="margin-left:6px; background:#222; padding:4px 8px; border-radius:6px;">
+          ${e.inscripcion} ${e.tipo}
+        </span>
+      </div>
+
+    </div>
+  `;
       });
 
       if (usuarioActual && usuarioActual.rol === "organizador") {
