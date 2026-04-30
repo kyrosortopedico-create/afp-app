@@ -415,7 +415,7 @@
       html += "</div>";
 
       html += "<button onclick='crearEvento()' style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
-      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
+      html += "<button onclick=\"volverInicio()\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
       cambiarContenidoConFade(html);
     }
@@ -431,7 +431,7 @@
       html += "<p><strong>Modalidad:</strong> " + e.modalidad + "</p>";
       html += "<p><strong>Inscripción:</strong> " + e.inscripcion + " " + e.tipo + "</p>";
 
-      html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
+      html += "<button onclick=\"volverInicio()\" style='width:100%; padding:10px; margin-top:20px;'>Volver</button>";
 
       cambiarContenidoConFade(html);
     }
@@ -463,6 +463,13 @@
         alert("Error al crear evento");
         console.error(error);
       }
+    }
+
+    function volverInicio() {
+      cambiarContenidoConFade("<p style='opacity:0'>.</p>");
+      setTimeout(() => {
+        cargarEventos();
+      }, 150);
     }
 
   </script>
