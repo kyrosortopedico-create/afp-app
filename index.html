@@ -288,20 +288,18 @@
 
        // ⏰ HORARIO
        html += "<label>Horario</label>";
-       html += "<select id='horario' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<select id='horario' style='width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;'>";
        html += "<option>16:00 - 17:00</option>";
        html += "<option>17:00 - 18:00</option>";
        html += "<option>18:00 - 19:00</option>";
        html += "<option>19:00 - 20:00</option>";
        html += "</select>";
 
-       // 📅 FECHA
        html += "<label>Fecha</label>";
-       html += "<input type='date' id='fecha' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<input type='date' id='fecha' style='width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;'>";
 
-       // 🎤 MODALIDAD
        html += "<label>Modalidad</label>";
-       html += "<select id='modalidad' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<select id='modalidad' style='width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;'>";
        html += "<option>1vs1</option>";
        html += "<option>2vs2</option>";
        html += "<option>3vs3</option>";
@@ -309,28 +307,26 @@
        html += "<option>5vs5</option>";
        html += "</select>";
 
-       // 💰 PRECIO
        html += "<label>Inscripción</label>";
-       html += "<select id='precio' style='width:100%; padding:10px; margin-bottom:10px;'>";
+       html += "<div style='display:flex; gap:10px; margin-bottom:10px;'>";
+
+       html += "<select id='inscripcion' style='width:75%; padding:10px; box-sizing:border-box;'>";
+       html += "<option>0</option>";
+       html += "<option>100</option>";
+       html += "<option>200</option>";
+       html += "<option>300</option>";
        html += "<option>500</option>";
-       html += "<option>1000</option>";
-       html += "<option>1500</option>";
-       html += "<option>2000</option>";
-       html += "<option>2500</option>";
-       html += "<option>3000</option>";
        html += "</select>";
 
-       // 👤 TIPO (MC o Equipo)
-       html += "<label>Tipo</label>";
-       html += "<select id='tipo' style='width:100%; padding:10px; margin-bottom:10px;'>";
-       html += "<option>MC</option>";
-       html += "<option>Equipo</option>";
+       html += "<select id='tipo' style='width:25%; padding:10px; box-sizing:border-box;'>";
+       html += "<option>ARS</option>";
+       html += "<option>USD</option>";
        html += "</select>";
 
-       // 🔘 BOTON CREAR
+       html += "</div>";
+
        html += "<button style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
 
-       // 🔙 VOLVER
        html += "<button onclick=\"cambiarPantalla('inicio')\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
        contenido.innerHTML = html;
