@@ -10,14 +10,30 @@
 
 <body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
 
+<div id="loaderScreen" style="
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#0a0a0a;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+  font-size:18px;
+">
+  Cargando...
+</div>
+
   <!-- HEADER -->
-  <div style="padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+  <div id="header" style="display:none; padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
     <h2 style="margin:0;">AFP</h2>
     <span id="usernameDisplay" style="font-size:14px;"></span>
   </div>
 
   <!-- CONTENIDO -->
-  <div id="contenido" style="padding:20px; text-align:center;">
+  <div id="contenido" style="display:none; padding:20px; text-align:center;"> style="padding:20px; text-align:center;">
     <p>Cargando...</p>
   </div>
 
@@ -68,6 +84,17 @@
 
     // 🔥 CONTROL DE SESIÓN LIMPIO
     onAuthStateChanged(auth, async (user) => {
+    const loader = document.getElementById("loaderScreen");
+    const header = document.getElementById("header");
+    const contenido = document.getElementById("contenido");
+    const menu = document.getElementById("menu");
+
+    // ocultar loader
+    loader.style.display = "none";
+
+    // mostrar interfaz
+    header.style.display = "flex";
+    contenido.style.display = "block";
 
       if (user) {
 
