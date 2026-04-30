@@ -87,10 +87,8 @@
 
     onAuthStateChanged(auth, async (user) => {
 
-      try {
-
-        if (user) {
-
+      if (user) {
+        try {
           const docSnap = await getDoc(doc(db, "usuarios", user.uid));
 
           if (docSnap.exists()) {
@@ -101,21 +99,23 @@
           cambiarPantalla("inicio");
           menu.style.display = "flex";
 
-        } else {
-
-          contenido.innerHTML = `
-        <h2>Bienvenido</h2>
-        <button onclick="mostrarLogin()" style="width:100%; padding:12px; margin-bottom:10px;">Iniciar Sesión</button>
-        <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">Registrarse</button>
-      `;
-
-          menu.style.display = "none";
+        } catch (error) {
+          console.error("Error usuario:", error);
+          contenido.innerHTML = "<p>Error cargando usuario</p>";
         }
 
-      } catch (e) {
-        console.error(e);
+      } else {
+
+        contenido.innerHTML = `
+      <h2>Bienvenido</h2>
+      <button onclick="mostrarLogin()" style="width:100%; padding:12px;">Iniciar Sesión</button>
+      <button onclick="mostrarRegistro()" style="width:100%; padding:12px;">Registrarse</button>
+    `;
+
+        menu.style.display = "none";
       }
 
+      // 🔥 SIEMPRE SE EJECUTA
       loader.style.display = "none";
       header.style.display = "flex";
       contenido.style.display = "block";
@@ -222,12 +222,28 @@
       const ubicacion = document.getElementById("ubicacion").value;
       const fecha = document.getElementById("fecha").value;
 
-      await addDoc(collection(db, "eventos"), {
-        ubicacion,
-        fecha
-      });
+      if (!fecha) {
+        alert("Seleccioná una fecha");
+        return;
+      }
 
-      cambiarPantalla("inicio");
+      try {
+
+        await addDoc(collection(db, "eventos"), {
+          ubicacion,
+          fecha,
+          horario: "Sin definir",
+          modalidad: "Sin definir",
+          inscripcion: "0",
+          tipo: "-"
+        });
+
+        cambiarPantalla("inicio");
+
+      } catch (error) {
+        console.error(error);
+        alert("Error al crear evento");
+      }
     }
 
   </script>
