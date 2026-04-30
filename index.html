@@ -242,6 +242,8 @@
 
     function cambiarPantalla(p) {
       if (p === "inicio") {
+        cargarEventos();
+      }
 
         let html = `
           <h2>Eventos</h2>
@@ -262,6 +264,53 @@
       if (p === "eventos") contenido.innerHTML = "Eventos";
       if (p === "organizadores") contenido.innerHTML = "Organizadores";
     }
+
+     async function cargarEventos() {
+
+       const querySnapshot = await getDocs(collection(db, "eventos"));
+
+       let eventos = [];
+
+       querySnapshot.forEach(doc => {
+         eventos.push(doc.data());
+       });
+
+       // 🔥 ORDENAR POR FECHA
+       eventos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+       let html = "<h2>Eventos</h2>";
+
+       if (eventos.length === 0) {
+         html += "<p>No hay eventos todavía</p>";
+       }
+
+       eventos.forEach(e => {
+         html += `
+           <div style="
+             background:#1a1a1a;
+             padding:15px;
+             margin-bottom:10px;
+             border-radius:10px;
+             text-align:left;
+           ">
+             <strong>${e.ubicacion}</strong><br>
+             ${e.fecha} — ${e.horario}<br>
+             ${e.modalidad} | ${e.inscripcion} ${e.tipo}
+           </div>
+         `;
+       });
+
+       // 🔥 BOTÓN CREAR SI ES ORGANIZADOR
+       if (usuarioActual && usuarioActual.rol === "organizador") {
+         html += `
+           <button onclick="pantallaCrearEvento()" style="width:100%; padding:12px; margin-top:15px;">
+             Crear Evento
+           </button>
+         `;
+       }
+
+       contenido.innerHTML = html;
+     }
 
      function pantallaCrearEvento() {
 
