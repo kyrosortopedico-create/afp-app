@@ -27,13 +27,13 @@
 </div>
 
   <!-- HEADER -->
-  <div id="header" style="display:none; padding:15px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
+  <div id="header" style="display:none; padding:15px; border-bottom:1px solid #222; justify-content:space-between; align-items:center;">
     <h2 style="margin:0;">AFP</h2>
     <span id="usernameDisplay" style="font-size:14px;"></span>
   </div>
 
   <!-- CONTENIDO -->
-  <div id="contenido" style="display:none; padding:20px; text-align:center;"> style="padding:20px; text-align:center;">
+  <div id="contenido" style="display:none; padding:20px; text-align:center;">
     <p>Cargando...</p>
   </div>
 
@@ -74,6 +74,8 @@
 
     const contenido = document.getElementById("contenido");
     const menu = document.getElementById("menu");
+    const header = document.getElementById("header");
+    const loader = document.getElementById("loaderScreen");
 
     // HACER FUNCIONES GLOBALES
     window.mostrarLogin = mostrarLogin;
@@ -82,23 +84,10 @@
     window.login = login;
     window.cambiarPantalla = cambiarPantalla;
 
-    // 🔥 CONTROL DE SESIÓN LIMPIO
+    // 🔥 CONTROL DE SESIÓN LIMPIO (ARREGLADO)
     onAuthStateChanged(auth, async (user) => {
-    const loader = document.getElementById("loaderScreen");
-    const header = document.getElementById("header");
-    const contenido = document.getElementById("contenido");
-    const menu = document.getElementById("menu");
-
-    // ocultar loader
-    loader.style.display = "none";
-
-    // mostrar interfaz
-    header.style.display = "flex";
-    contenido.style.display = "block";
 
       if (user) {
-
-        menu.style.display = "flex";
 
         const docRef = doc(db, "usuarios", user.uid);
         const docSnap = await getDoc(docRef);
@@ -108,10 +97,9 @@
         }
 
         cambiarPantalla("inicio");
+        menu.style.display = "flex";
 
       } else {
-
-        menu.style.display = "none";
 
         contenido.innerHTML = `
           <h2>Bienvenido</h2>
@@ -124,7 +112,14 @@
             Registrarse
           </button>
         `;
+
+        menu.style.display = "none";
       }
+
+      // 🔥 MOSTRAR UI SOLO AL FINAL
+      loader.style.display = "none";
+      header.style.display = "flex";
+      contenido.style.display = "block";
 
     });
 
