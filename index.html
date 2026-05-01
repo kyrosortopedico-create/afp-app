@@ -316,7 +316,7 @@
       eventos.forEach(e => {
 
         html += `
-    <div onclick="clickEvento(this, '${e.id}')" style="
+    <div data-id="${e.id}" class="eventoCard" style="
       position:relative;
       overflow:hidden;
       border-radius:16px;
@@ -651,6 +651,17 @@
 
       verEvento(evento);
     }
+
+    document.addEventListener("click", function (e) {
+
+      const card = e.target.closest(".eventoCard");
+
+      if (!card) return;
+
+      const id = card.getAttribute("data-id");
+
+      clickEvento(card, id);
+    });
 
   </script>
 
