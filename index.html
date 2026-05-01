@@ -328,13 +328,14 @@
 
       <div style="padding:16px 16px 16px 14px;">
 
-        <!-- COMPETENCIA -->
+        <!-- COMPETENCIA (AHORA PROTAGONISTA) -->
         <div style="
-          font-size:12px;
-          font-weight:bold;
+          font-size:18px;
+          font-weight:900;
           color:${e.color};
-          margin-bottom:6px;
+          margin-bottom:8px;
           text-align:left;
+          letter-spacing:0.5px;
         ">
           ${e.competencia}
         </div>
@@ -350,16 +351,17 @@
           <div style="text-align:left;">
 
             <div style="
-              font-size:20px;
-              font-weight:800;
+              font-size:17px;
+              font-weight:700;
               margin-bottom:4px;
+              color:#fff;
             ">
               ${e.ubicacion}
             </div>
 
             <div style="
               font-size:14px;
-              color:#ccc;
+              color:#bbb;
               font-weight:500;
             ">
               ${formatearHora(e.horario)} HS • $${e.inscripcion}
@@ -367,15 +369,16 @@
 
           </div>
 
-          <!-- DERECHA (PRIORIDAD) -->
+          <!-- DERECHA (MAS PROTAGONISMO) -->
           <div style="
             text-align:right;
-            font-size:15px;
-            font-weight:700;
+            font-size:18px;
+            font-weight:800;
             color:#fff;
+            line-height:1.2;
           ">
             ${e.modalidad.toUpperCase()}<br>
-            <span style="font-size:13px; color:#aaa;">
+            <span style="font-size:14px; color:#aaa;">
               ${formatearFecha(e.fecha)}
             </span>
           </div>
