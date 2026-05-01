@@ -626,7 +626,9 @@
       contenido.style.opacity = "0";
 
       setTimeout(() => {
-        cargarEventos();
+
+        // ⚡ mostramos placeholder inmediato
+        contenido.innerHTML = "<p style='opacity:0.6'>Cargando eventos...</p>";
 
         contenido.style.transition = "none";
         contenido.style.transform = "translateX(-30px)";
@@ -637,6 +639,9 @@
           contenido.style.transform = "translateX(0)";
           contenido.style.opacity = "1";
         });
+
+        // 🔥 recién acá cargamos datos reales
+        cargarEventos();
 
       }, 180);
     }
