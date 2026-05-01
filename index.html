@@ -326,7 +326,7 @@
         background:${e.color};
       "></div>
 
-      <div style="padding:16px; margin-left:6px;">
+      <div style="padding:16px 16px 16px 14px;">
 
         <!-- COMPETENCIA -->
         <div style="
@@ -334,40 +334,52 @@
           font-weight:bold;
           color:${e.color};
           margin-bottom:6px;
+          text-align:left;
         ">
           ${e.competencia}
         </div>
 
-        <!-- LINEA PRINCIPAL -->
+        <!-- BLOQUE PRINCIPAL -->
         <div style="
           display:flex;
           justify-content:space-between;
-          align-items:center;
-          font-size:16px;
-          font-weight:bold;
+          align-items:flex-start;
         ">
 
-          <div>
-            ${e.ubicacion}
+          <!-- IZQUIERDA -->
+          <div style="text-align:left;">
+
+            <div style="
+              font-size:20px;
+              font-weight:800;
+              margin-bottom:4px;
+            ">
+              ${e.ubicacion}
+            </div>
+
+            <div style="
+              font-size:14px;
+              color:#ccc;
+              font-weight:500;
+            ">
+              ${formatearHora(e.horario)} HS • $${e.inscripcion}
+            </div>
+
           </div>
 
+          <!-- DERECHA (PRIORIDAD) -->
           <div style="
-            font-size:12px;
-            color:#aaa;
-            font-weight:600;
+            text-align:right;
+            font-size:15px;
+            font-weight:700;
+            color:#fff;
           ">
-            ${e.modalidad.toUpperCase()} • ${formatearFecha(e.fecha)}
+            ${e.modalidad.toUpperCase()}<br>
+            <span style="font-size:13px; color:#aaa;">
+              ${formatearFecha(e.fecha)}
+            </span>
           </div>
 
-        </div>
-
-        <!-- LINEA FINAL -->
-        <div style="
-          margin-top:6px;
-          font-size:14px;
-          color:#ccc;
-        ">
-          ${formatearHora(e.horario)} HS • $${e.inscripcion}
         </div>
 
       </div>
@@ -579,7 +591,7 @@
         cargarEventos();
       }, 150);
     }
-    
+
     function formatearFecha(fecha) {
 
       const meses = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
