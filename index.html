@@ -305,8 +305,9 @@
         html += "<p>No hay eventos todavía</p>";
       }
       eventos.forEach(e => {
+
         html += `
-    <div onclick='verEvento(${JSON.stringify(e)})' style="
+    <div onclick="verEventoPorId('${e.id}')" style="
       position:relative;
       overflow:hidden;
       border-radius:16px;
@@ -316,7 +317,6 @@
       box-shadow:0 6px 20px rgba(0,0,0,0.6);
     ">
 
-      <!-- BARRA DE COLOR -->
       <div style="
         position:absolute;
         left:0;
@@ -326,7 +326,6 @@
         background:${e.color};
       "></div>
 
-      <!-- CONTENIDO -->
       <div style="padding:16px; margin-left:6px;">
 
         <!-- COMPETENCIA -->
@@ -335,46 +334,40 @@
           font-weight:bold;
           color:${e.color};
           margin-bottom:6px;
-          letter-spacing:0.5px;
         ">
           ${e.competencia}
         </div>
 
-        <!-- UBICACION -->
+        <!-- LINEA PRINCIPAL -->
         <div style="
-          font-size:17px;
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          font-size:16px;
           font-weight:bold;
-          margin-bottom:6px;
         ">
-          ${e.ubicacion}
+
+          <div>
+            ${e.ubicacion}
+          </div>
+
+          <div style="
+            font-size:12px;
+            color:#aaa;
+            font-weight:600;
+          ">
+            ${e.modalidad.toUpperCase()} • ${formatearFecha(e.fecha)}
+          </div>
+
         </div>
 
-        <!-- INFO -->
-        <div style="font-size:13px; color:#aaa;">
-          ${e.fecha} • ${e.horario}
-        </div>
-
-        <!-- TAGS -->
-        <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-
-          <span style="
-            background:#1f1f1f;
-            padding:4px 8px;
-            border-radius:6px;
-            font-size:12px;
-          ">
-            ${e.modalidad}
-          </span>
-
-          <span style="
-            background:#1f1f1f;
-            padding:4px 8px;
-            border-radius:6px;
-            font-size:12px;
-          ">
-            ${e.inscripcion} ${e.tipo}
-          </span>
-
+        <!-- LINEA FINAL -->
+        <div style="
+          margin-top:6px;
+          font-size:14px;
+          color:#ccc;
+        ">
+          ${formatearHora(e.horario)} HS • $${e.inscripcion}
         </div>
 
       </div>
@@ -585,6 +578,19 @@
       setTimeout(() => {
         cargarEventos();
       }, 150);
+    }
+    
+    function formatearFecha(fecha) {
+
+      const meses = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+
+      const d = new Date(fecha);
+
+      return d.getDate() + " " + meses[d.getMonth()];
+    }
+
+    function formatearHora(rango) {
+      return rango.split(" - ")[0];
     }
 
   </script>
