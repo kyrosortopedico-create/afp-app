@@ -84,6 +84,7 @@
     const db = getFirestore(app);
 
     const contenido = document.getElementById("contenido");
+    let eventos = [];
     const menu = document.getElementById("menu");
     const header = document.getElementById("header");
     const loader = document.getElementById("loaderScreen");
@@ -295,10 +296,14 @@
 
       const querySnapshot = await getDocs(collection(db, "eventos"));
 
-      let eventos = [];
+
+
+      eventos = [];
 
       querySnapshot.forEach(doc => {
-        eventos.push(doc.data());
+        const data = doc.data();
+        data.id = doc.id;
+        eventos.push(data);
       });
 
       eventos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
@@ -633,6 +638,18 @@
       setTimeout(() => {
         verEventoPorId(id);
       }, 120);
+    }
+
+    function verEventoPorId(id) {
+
+      const evento = eventos.find(e => e.id === id);
+
+      if (!evento) {
+        console.log("Evento no encontrado:", id);
+        return;
+      }
+
+      verEvento(evento);
     }
 
   </script>
