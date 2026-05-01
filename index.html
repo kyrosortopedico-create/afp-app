@@ -14,6 +14,10 @@
       opacity: 1;
       transition: opacity 0.2s ease;
     }
+
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
   </style>
 
   <div id="loaderScreen" style="
@@ -307,7 +311,7 @@
       eventos.forEach(e => {
 
         html += `
-    <div onclick="verEventoPorId('${e.id}')" style="
+    <div onclick="clickEvento(this, '${e.id}')" style="
       position:relative;
       overflow:hidden;
       border-radius:16px;
@@ -606,6 +610,29 @@
 
     function formatearHora(rango) {
       return rango.split(" - ")[0];
+    }
+
+    function clickEvento(el, id) {
+
+      // activar efecto
+      el.style.background = "#ffffff";
+      el.style.color = "#000000";
+
+      // invertir textos internos
+      el.querySelectorAll("*").forEach(n => {
+        n.style.color = "#000";
+      });
+
+      // mantener barra de color
+      const barra = el.querySelector("div");
+      if (barra) {
+        barra.style.background = barra.style.background;
+      }
+
+      // delay para transición
+      setTimeout(() => {
+        verEventoPorId(id);
+      }, 120);
     }
 
   </script>
