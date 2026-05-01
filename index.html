@@ -18,6 +18,19 @@
     * {
       -webkit-tap-highlight-color: transparent;
     }
+
+    .eventoCardAnim {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+      animation: aparecerCard 0.4s ease forwards;
+    }
+
+    @keyframes aparecerCard {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
   </style>
 
   <div id="loaderScreen" style="
@@ -335,10 +348,11 @@
       if (eventos.length === 0) {
         html += "<p>No hay eventos todavía</p>";
       }
-      eventos.forEach(e => {
+      eventos.forEach((e, i) => {
 
         html += `
-    <div data-id="${e.id}" class="eventoCard" style="
+    <div data-id="${e.id}" class="eventoCard eventoCardAnim" style="
+      animation-delay:${i * 0.05}s;
       position:relative;
       overflow:hidden;
       border-radius:16px;
