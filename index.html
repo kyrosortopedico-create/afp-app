@@ -272,12 +272,20 @@
         `;
       }
 
-      cambiarContenidoConFade(html);
+      cambiarContenidoConAnimacion(html, "adelante");
     }
 
-    function cambiarContenidoConFade(nuevoHTML) {
+    function cambiarContenidoConAnimacion(nuevoHTML, direccion = "adelante") {
 
-      // fade out
+      // posición inicial (salida)
+      contenido.style.transition = "transform 0.25s ease, opacity 0.2s ease";
+
+      if (direccion === "adelante") {
+        contenido.style.transform = "translateX(-30px)";
+      } else {
+        contenido.style.transform = "translateX(30px)";
+      }
+
       contenido.style.opacity = "0";
 
       setTimeout(() => {
@@ -285,11 +293,25 @@
         // cambiar contenido
         contenido.innerHTML = nuevoHTML;
 
-        // fade in
-        contenido.style.opacity = "1";
+        // posición de entrada (desde el lado opuesto)
+        contenido.style.transition = "none";
 
-      }, 150);
+        if (direccion === "adelante") {
+          contenido.style.transform = "translateX(30px)";
+        } else {
+          contenido.style.transform = "translateX(-30px)";
+        }
 
+        contenido.style.opacity = "0";
+
+        // activar animación
+        requestAnimationFrame(() => {
+          contenido.style.transition = "transform 0.25s ease, opacity 0.2s ease";
+          contenido.style.transform = "translateX(0)";
+          contenido.style.opacity = "1";
+        });
+
+      }, 180);
     }
 
     async function cargarEventos() {
@@ -474,7 +496,7 @@
       html += "<button onclick='crearEvento()' style='width:100%; padding:12px; margin-top:10px;'>Crear</button>";
       html += "<button onclick=\"volverInicio()\" style='width:100%; padding:10px; margin-top:10px; background:#222;'>Volver</button>";
 
-      cambiarContenidoConFade(html);
+      cambiarContenidoConAnimacion(html, "adelante");
     }
 
     function verEvento(e) {
@@ -549,7 +571,7 @@
 
       html += `</div>`;
 
-      cambiarContenidoConFade(html);
+      cambiarContenidoConAnimacion(html, "adelante");
     }
 
     async function crearEvento() {
@@ -598,10 +620,25 @@
     }
 
     function volverInicio() {
-      cambiarContenidoConFade("<p style='opacity:0'>.</p>");
+
+      contenido.style.transition = "transform 0.25s ease, opacity 0.2s ease";
+      contenido.style.transform = "translateX(30px)";
+      contenido.style.opacity = "0";
+
       setTimeout(() => {
         cargarEventos();
-      }, 150);
+
+        contenido.style.transition = "none";
+        contenido.style.transform = "translateX(-30px)";
+        contenido.style.opacity = "0";
+
+        requestAnimationFrame(() => {
+          contenido.style.transition = "transform 0.25s ease, opacity 0.2s ease";
+          contenido.style.transform = "translateX(0)";
+          contenido.style.opacity = "1";
+        });
+
+      }, 180);
     }
 
     function formatearFecha(fecha) {
