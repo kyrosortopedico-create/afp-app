@@ -602,7 +602,7 @@
       if (usuarioActual && auth.currentUser.uid === e.creadorId) {
 
         html += `
-    <button onclick="event.stopPropagation(); eliminarEvento('${e.id}')" style="
+    <button onclick="eliminarEvento(event, '${e.id}')" style="
   position:absolute;
   top:12px;
   right:12px;
@@ -910,10 +910,11 @@
       };
     }
 
-    async function eliminarEvento(id) {
+    async function eliminarEvento(e, id) {
+
+      e.stopPropagation(); // 🔥 corta el click SIEMPRE
 
       const confirmar = confirm("¿Eliminar este evento?");
-
       if (!confirmar) return;
 
       try {
