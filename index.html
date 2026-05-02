@@ -1083,9 +1083,8 @@
         }
 
         // 🔥 REGISTRO DEL SERVICE WORKER (CLAVE)
-        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        const registration = await navigator.serviceWorker.register("/afp-app/firebase-messaging-sw.js");
 
-        // 🔥 OBTENER TOKEN
         const token = await getToken(messaging, {
           vapidKey: "BAPihskMt-2p5NFcwwYgu0PX6OLFiHv7E5EICE17huCZpP-nZRSab9zuptdcpGV6Za8S7_UIxk5_GZksuHqeayk",
           serviceWorkerRegistration: registration
