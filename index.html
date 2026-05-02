@@ -648,7 +648,27 @@
       const fecha = document.getElementById("fecha").value;
       const modalidad = document.getElementById("modalidad").value;
       const inscripcion = document.getElementById("inscripcion").value;
+      const tipo = document.getElementById("tipo").value;
+
+      // 🔥 VALIDACIÓN REAL
+      if (!fecha || !ubicacion || !horario || !modalidad || !inscripcion || !tipo) {
+
+        let error = document.getElementById("errorEvento");
+
+        if (!error) {
+          error = document.createElement("p");
+          error.id = "errorEvento";
+          error.style.color = "red";
+          error.style.marginTop = "10px";
+          contenido.appendChild(error);
+        }
+
+        error.innerText = "Debes completar todos los campos.";
+        return;
+      }
+
       const competencia = usuarioActual.competencia;
+
       if (!competencia) {
         alert("Error: usuario sin competencia asignada");
         return;
@@ -658,11 +678,10 @@
 
       if (competencia === "Liga Litoral") color = "#FF4C00";
       if (competencia === "Rappandemia") color = "#440069";
-      if (competencia === "Homies") color = "#0DBFA1"; // diamante
+      if (competencia === "Homies") color = "#0DBFA1";
       if (competencia === "La Casa del Free") color = "#FFF200";
       if (competencia === "Wasted") color = "#212121";
       if (competencia === "RP") color = "#1064AD";
-      const tipo = document.getElementById("tipo").value;
 
       const misEventos = eventos.filter(e => e.creadorId === auth.currentUser.uid);
 
@@ -686,6 +705,10 @@
         });
 
         alert("Evento creado correctamente");
+
+        // 🔥 recarga REAL
+        await cargarEventos();
+
         cambiarPantalla("inicio");
 
       } catch (error) {
@@ -753,8 +776,12 @@
 
     function esEventoActivo(fecha) {
 
+      if (!fecha) return false;
+
       const hoy = new Date();
       const evento = new Date(fecha);
+
+      if (isNaN(evento)) return false;
 
       hoy.setHours(0, 0, 0, 0);
       evento.setHours(0, 0, 0, 0);
