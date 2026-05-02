@@ -686,7 +686,7 @@
       const misEventos = eventos.filter(e => e.creadorId === auth.currentUser.uid);
 
       if (misEventos.length >= 2) {
-        alert("Solo podés tener 2 eventos activos");
+        mostrarNotificacion("Máximo 2 eventos activos");
         return;
       }
 
@@ -704,7 +704,7 @@
           creadorId: auth.currentUser.uid
         });
 
-        alert("Evento creado correctamente");
+        mostrarNotificacion("Evento creado");
 
         // 🔥 recarga REAL
         await cargarEventos();
@@ -712,7 +712,7 @@
         cambiarPantalla("inicio");
 
       } catch (error) {
-        alert("Error al crear evento");
+        mostrarNotificacion("Error al crear evento");
         console.error(error);
       }
     }
@@ -915,8 +915,18 @@
 
       e.stopPropagation(); // 🔥 corta el click SIEMPRE
 
-      const confirmar = confirm("¿Eliminar este evento?");
-      if (!confirmar) return;
+      mostrarConfirmacion("¿Eliminar este evento?", async () => {
+
+        try {
+          await deleteDoc(doc(db, "eventos", id));
+          mostrarNotificacion("Evento eliminado");
+          volverInicio();
+        } catch (error) {
+          mostrarNotificacion("Error al eliminar");
+          console.error(error);
+        }
+
+      });
 
       try {
 
@@ -928,6 +938,92 @@
       } catch (error) {
         alert("Error al eliminar");
         console.error(error);
+      }
+    }
+
+    function mostrarConfirmacion(mensaje, onConfirm) {
+
+      const overlay = document.createElement("div");
+
+      overlay.style = `
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:9999;
+  `;
+
+      const modal = document.createElement("div");
+
+      modal.style = `
+    width:90%;
+    max-width:400px;
+    background:#111;
+    border-radius:20px 20px 0 0;
+    padding:20px;
+    box-shadow:0 -10px 30px rgba(0,0,0,0.6);
+    transform:translateY(100%);
+    transition:transform 0.3s ease;
+  `;
+
+      modal.innerHTML = `
+    <div style="font-size:16px; margin-bottom:20px;">
+      ${mensaje}
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button id="cancelarBtn" style="
+        flex:1;
+        padding:12px;
+        border:none;
+        border-radius:10px;
+        background:#222;
+        color:#fff;
+      ">
+        Cancelar
+      </button>
+
+      <button id="okBtn" style="
+        flex:1;
+        padding:12px;
+        border:none;
+        border-radius:10px;
+        background:#ff3b3b;
+        color:#fff;
+        font-weight:bold;
+      ">
+        Aceptar
+      </button>
+    </div>
+  `;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      // animación entrada
+      setTimeout(() => {
+        modal.style.transform = "translateY(0)";
+      }, 10);
+
+      // cancelar
+      modal.querySelector("#cancelarBtn").onclick = () => {
+        cerrar();
+      };
+
+      // aceptar
+      modal.querySelector("#okBtn").onclick = () => {
+        cerrar();
+        onConfirm();
+      };
+
+      function cerrar() {
+        modal.style.transform = "translateY(100%)";
+        setTimeout(() => overlay.remove(), 300);
       }
     }
 
