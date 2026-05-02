@@ -670,7 +670,7 @@
       const competencia = usuarioActual.competencia;
 
       if (!competencia) {
-        alert("Error: usuario sin competencia asignada");
+        mostrarNotificacion("Usuario sin competencia");
         return;
       }
 
@@ -913,14 +913,18 @@
 
     async function eliminarEvento(e, id) {
 
-      e.stopPropagation(); // 🔥 corta el click SIEMPRE
+      e.stopPropagation();
 
       mostrarConfirmacion("¿Eliminar este evento?", async () => {
 
         try {
           await deleteDoc(doc(db, "eventos", id));
+
           mostrarNotificacion("Evento eliminado");
-          volverInicio();
+
+          await cargarEventos();
+          cambiarPantalla("inicio");
+
         } catch (error) {
           mostrarNotificacion("Error al eliminar");
           console.error(error);
@@ -928,17 +932,6 @@
 
       });
 
-      try {
-
-        await deleteDoc(doc(db, "eventos", id));
-
-        await cargarEventos();
-        cambiarPantalla("inicio");
-
-      } catch (error) {
-        alert("Error al eliminar");
-        console.error(error);
-      }
     }
 
     function mostrarConfirmacion(mensaje, onConfirm) {
@@ -1025,6 +1018,49 @@
         modal.style.transform = "translateY(100%)";
         setTimeout(() => overlay.remove(), 300);
       }
+    }
+
+    function mostrarNotificacion(texto) {
+
+      const notif = document.createElement("div");
+
+      notif.style = `
+    position:fixed;
+    bottom:110px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#1a1a1a;
+    border:1px solid #333;
+    padding:12px 18px;
+    border-radius:12px;
+    color:#fff;
+    font-size:14px;
+    z-index:9999;
+    opacity:0;
+    transition:all 0.3s ease;
+    box-shadow:0 6px 20px rgba(0,0,0,0.6);
+  `;
+
+      notif.innerText = texto;
+
+      document.body.appendChild(notif);
+
+      // entrada
+      setTimeout(() => {
+        notif.style.opacity = "1";
+        notif.style.transform = "translateX(-50%) translateY(0)";
+      }, 10);
+
+      // salida
+      setTimeout(() => {
+        notif.style.opacity = "0";
+        notif.style.transform = "translateX(-50%) translateY(20px)";
+      }, 2000);
+
+      // eliminar
+      setTimeout(() => {
+        notif.remove();
+      }, 2500);
     }
 
   </script>
