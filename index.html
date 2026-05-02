@@ -81,7 +81,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCueKXS0FR-MRDDqcJCanVBl_U4w11FJmg",
@@ -336,13 +336,15 @@
 
       eventos = [];
 
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        data.id = doc.id;
-        eventos.push(data);
+      querySnapshot.forEach(docSnap => {
+        eventos.push({
+          id: docSnap.id,
+          ...docSnap.data()
+        });
       });
 
       eventos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      eventos = eventos.filter(e => esEventoActivo(e.fecha));
 
       let html = "<h2>Eventos</h2>";
 
@@ -417,17 +419,47 @@
 
           <!-- DERECHA (MAS PROTAGONISMO) -->
           <div style="
-            text-align:right;
-            font-size:18px;
-            font-weight:800;
-            color:#fff;
-            line-height:1.2;
-          ">
-            ${e.modalidad.toUpperCase()}<br>
-            <span style="font-size:14px; color:#aaa;">
-              ${formatearFecha(e.fecha)}
-            </span>
-          </div>
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+">
+
+  ${obtenerEstadoEvento(e.fecha) === "HOY"
+            ? `<div style="
+          background:#1eff8a;
+          color:#000;
+          font-size:11px;
+          font-weight:900;
+          padding:2px 8px;
+          border-radius:6px;
+        ">HOY</div>`
+            : obtenerEstadoEvento(e.fecha) === "MAÑANA"
+              ? `<div style="
+          background:#ffd400;
+          color:#000;
+          font-size:11px;
+          font-weight:900;
+          padding:2px 8px;
+          border-radius:6px;
+        ">MAÑANA</div>`
+              : ""
+          }
+
+  <div style="
+    font-size:18px;
+    font-weight:800;
+    color:#fff;
+    line-height:1.2;
+  ">
+    ${e.modalidad.toUpperCase()}<br>
+    <span style="font-size:14px; color:#aaa;">
+      ${formatearFecha(e.fecha)}
+    </span>
+  </div>
+
+</div>
 
         </div>
 
@@ -569,6 +601,26 @@
     </div>
   `;
 
+      if (usuarioActual && auth.currentUser.uid === e.creadorId) {
+
+        html += `
+    <button onclick="eliminarEvento('${e.id}')" style="
+      position:absolute;
+      bottom:20px;
+      right:20px;
+      background:#ff3b3b;
+      border:none;
+      border-radius:12px;
+      padding:12px;
+      color:#fff;
+      font-size:16px;
+      cursor:pointer;
+    ">
+      🗑
+    </button>
+  `;
+      }
+
       html += `
     <button onclick="volverInicio()" style="
       width:100%;
@@ -612,6 +664,13 @@
       if (competencia === "RP") color = "#1064AD";
       const tipo = document.getElementById("tipo").value;
 
+      const misEventos = eventos.filter(e => e.creadorId === auth.currentUser.uid);
+
+      if (misEventos.length >= 2) {
+        alert("Solo podés tener 2 eventos activos");
+        return;
+      }
+
       try {
         await addDoc(collection(db, "eventos"), {
           ubicacion,
@@ -622,7 +681,8 @@
           tipo,
           competencia,
           color,
-          creado: Date.now()
+          creado: Date.now(),
+          creadorId: auth.currentUser.uid
         });
 
         alert("Evento creado correctamente");
@@ -674,26 +734,45 @@
       return rango.split(" - ")[0];
     }
 
-    function clickEvento(el, id) {
+    function obtenerEstadoEvento(fecha) {
 
-      // activar efecto
+      const hoy = new Date();
+      const evento = new Date(fecha);
+
+      // normalizamos a 00:00 para comparar solo día
+      hoy.setHours(0, 0, 0, 0);
+      evento.setHours(0, 0, 0, 0);
+
+      const diff = (evento - hoy) / (1000 * 60 * 60 * 24);
+
+      if (diff === 0) return "HOY";
+      if (diff === 1) return "MAÑANA";
+
+      return null;
+    }
+
+    function esEventoActivo(fecha) {
+
+      const hoy = new Date();
+      const evento = new Date(fecha);
+
+      hoy.setHours(0, 0, 0, 0);
+      evento.setHours(0, 0, 0, 0);
+
+      return evento >= hoy;
+    }
+
+    function clickEvento(el, evento) {
+
       el.style.background = "#ffffff";
       el.style.color = "#000000";
 
-      // invertir textos internos
       el.querySelectorAll("*").forEach(n => {
         n.style.color = "#000";
       });
 
-      // mantener barra de color
-      const barra = el.querySelector("div");
-      if (barra) {
-        barra.style.background = barra.style.background;
-      }
-
-      // delay para transición
       setTimeout(() => {
-        verEventoPorId(id);
+        verEvento(evento);
       }, 120);
     }
 
@@ -717,7 +796,14 @@
 
       const id = card.getAttribute("data-id");
 
-      clickEvento(card, id);
+      const evento = eventos.find(ev => ev.id === id);
+
+      if (!evento) {
+        console.log("Evento no encontrado:", id);
+        return;
+      }
+
+      clickEvento(card, evento);
     });
 
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -791,6 +877,24 @@
         deferredPrompt = null;
         banner.remove();
       };
+    }
+
+    async function eliminarEvento(id) {
+
+      const confirmar = confirm("¿Eliminar este evento?");
+
+      if (!confirmar) return;
+
+      try {
+
+        await deleteDoc(doc(db, "eventos", id));
+
+        volverInicio();
+
+      } catch (error) {
+        alert("Error al eliminar");
+        console.error(error);
+      }
     }
 
   </script>
