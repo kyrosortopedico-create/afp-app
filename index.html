@@ -602,7 +602,7 @@
       if (usuarioActual && auth.currentUser.uid === e.creadorId) {
 
         html += `
-    <button onclick="eliminarEvento('${e.id}')" style="
+    <button onclick="event.stopPropagation(); eliminarEvento('${e.id}')" style="
   position:absolute;
   top:12px;
   right:12px;
@@ -760,10 +760,13 @@
 
     function obtenerEstadoEvento(fecha) {
 
-      const hoy = new Date();
-      const evento = new Date(fecha);
+      if (!fecha) return null;
 
-      // normalizamos a 00:00 para comparar solo día
+      const [y, m, d] = fecha.split("-");
+
+      const hoy = new Date();
+      const evento = new Date(y, m - 1, d); // 🔥 LOCAL (NO UTC)
+
       hoy.setHours(0, 0, 0, 0);
       evento.setHours(0, 0, 0, 0);
 
@@ -779,10 +782,10 @@
 
       if (!fecha) return false;
 
-      const hoy = new Date();
-      const evento = new Date(fecha);
+      const [y, m, d] = fecha.split("-");
 
-      if (isNaN(evento)) return false;
+      const hoy = new Date();
+      const evento = new Date(y, m - 1, d); // 🔥 LOCAL
 
       hoy.setHours(0, 0, 0, 0);
       evento.setHours(0, 0, 0, 0);
@@ -917,7 +920,8 @@
 
         await deleteDoc(doc(db, "eventos", id));
 
-        volverInicio();
+        await cargarEventos();
+        cambiarPantalla("inicio");
 
       } catch (error) {
         alert("Error al eliminar");
