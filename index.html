@@ -419,43 +419,37 @@
 
           <!-- DERECHA (MAS PROTAGONISMO) -->
           <div style="
+  position:relative;
   text-align:right;
   display:flex;
   flex-direction:column;
   align-items:flex-end;
   justify-content:flex-start;
-  gap:2px;
-  margin-top:2px;
 ">
 
-  ${obtenerEstadoEvento(e.fecha) === "HOY"
+  ${obtenerEstadoEvento(e.fecha)
             ? `<div style="
-          background:#1eff8a;
+          position:absolute;
+          top:-8px;
+          right:0;
+          background:${obtenerEstadoEvento(e.fecha) === "HOY" ? "#1eff8a" : "#ffd400"};
           color:#000;
-          font-size:11px;
+          font-size:10px;
           font-weight:900;
-          padding:2px 8px;
+          padding:2px 6px;
           border-radius:6px;
-        ">HOY</div>`
-            : obtenerEstadoEvento(e.fecha) === "MAÑANA"
-              ? `<div style="
-          background:#ffd400;
-          color:#000;
-          font-size:11px;
-          font-weight:900;
-          padding:2px 8px;
-          border-radius:6px;
-        ">MAÑANA</div>`
-              : ""
+        ">
+          ${obtenerEstadoEvento(e.fecha)}
+        </div>`
+            : ""
           }
 
   <div style="
-  font-size:18px;
-  font-weight:800;
-  color:#fff;
-  line-height:1.1;
-  margin-top:2px;
-">
+    font-size:18px;
+    font-weight:800;
+    color:#fff;
+    line-height:1.1;
+  ">
     ${e.modalidad.toUpperCase()}<br>
     <span style="font-size:14px; color:#aaa;">
       ${formatearFecha(e.fecha)}
@@ -749,11 +743,13 @@
 
     function formatearFecha(fecha) {
 
+      if (!fecha) return "";
+
       const meses = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
-      const d = new Date(fecha);
+      const [year, month, day] = fecha.split("-");
 
-      return d.getDate() + " " + meses[d.getMonth()];
+      return parseInt(day) + " " + meses[parseInt(month) - 1];
     }
 
     function formatearHora(rango) {
