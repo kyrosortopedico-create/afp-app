@@ -102,6 +102,7 @@
     const header = document.getElementById("header");
     const loader = document.getElementById("loaderScreen");
     let usuarioActual = null;
+    let deferredPrompt = null;
 
     window.mostrarLogin = mostrarLogin;
     window.mostrarRegistro = mostrarRegistro;
@@ -718,6 +719,73 @@
 
       clickEvento(card, id);
     });
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      setTimeout(() => {
+        mostrarBannerInstalar();
+      }, 2000);
+    });
+
+    function mostrarBannerInstalar() {
+
+      // no mostrar si ya está instalada
+      if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+      // evitar duplicado
+      if (document.getElementById("installBanner")) return;
+
+      const banner = document.createElement("div");
+      banner.id = "installBanner";
+
+      banner.style = `
+    position:fixed;
+    bottom:90px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#111;
+    border:1px solid #222;
+    padding:12px 16px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    z-index:9999;
+    box-shadow:0 6px 20px rgba(0,0,0,0.6);
+  `;
+
+      banner.innerHTML = `
+    <span style="font-size:13px; color:#fff;">
+      Instalar AFP
+    </span>
+
+    <button id="btnInstalar" style="
+      padding:6px 12px;
+      border:none;
+      border-radius:8px;
+      background:#fff;
+      color:#000;
+      font-weight:bold;
+    ">
+      Instalar
+    </button>
+  `;
+
+      document.body.appendChild(banner);
+
+      document.getElementById("btnInstalar").onclick = async () => {
+
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+
+        deferredPrompt = null;
+        banner.remove();
+      };
+    }
 
   </script>
 
