@@ -82,6 +82,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCueKXS0FR-MRDDqcJCanVBl_U4w11FJmg",
@@ -95,6 +96,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const messaging = getMessaging(app);
 
     const contenido = document.getElementById("contenido");
     let eventos = [];
@@ -122,6 +124,7 @@
       try {
 
         if (user) {
+          activarNotificaciones();
 
           const docRef = doc(db, "usuarios", user.uid);
           const docSnap = await getDoc(docRef);
@@ -1062,6 +1065,57 @@
         notif.remove();
       }, 2500);
     }
+
+    async function activarNotificaciones() {
+
+      try {
+
+        // 🔹 evitar pedir permiso mil veces
+        let permiso = Notification.permission;
+
+        if (permiso !== "granted") {
+          permiso = await Notification.requestPermission();
+        }
+
+        if (permiso !== "granted") {
+          console.log("Permiso denegado");
+          return;
+        }
+
+        // 🔥 REGISTRO DEL SERVICE WORKER (CLAVE)
+        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+
+        // 🔥 OBTENER TOKEN
+        const token = await getToken(messaging, {
+          vapidKey: "BAPihskMt-2p5NFcwwYgu0PX6OLFiHv7E5EICE17huCZpP-nZRSab9zuptdcpGV6Za8S7_UIxk5_GZksuHqeayk",
+          serviceWorkerRegistration: registration
+        });
+
+        if (token) {
+          console.log("TOKEN:", token);
+
+          if (auth.currentUser) {
+            await setDoc(doc(db, "tokens", auth.currentUser.uid), {
+              token
+            }, { merge: true });
+          }
+
+        } else {
+          console.log("No se pudo obtener token");
+        }
+
+      } catch (error) {
+        console.error("Error notificaciones:", error);
+      }
+    }
+
+    onMessage(messaging, (payload) => {
+      console.log("Notificación recibida:", payload);
+
+      mostrarNotificacion(
+        payload?.notification?.title || payload?.data?.title || "AFP"
+      );
+    });
 
   </script>
 
