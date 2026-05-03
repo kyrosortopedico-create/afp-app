@@ -12,12 +12,13 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
-  self.registration.showNotification("AFP", {
-    body: "Nuevo evento creado.",
+  const title = payload.data?.title || "AFP";
+  const body = payload.data?.body || "Nuevo evento creado.";
+
+  self.registration.showNotification(title, {
+    body: body,
     icon: "/afp-app/icono.png",
     badge: "/afp-app/icono.png",
-    tag: "nuevo-evento",
-    renotify: false,
-    requireInteraction: false
+    tag: "nuevo-evento"
   });
 });
