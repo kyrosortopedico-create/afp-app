@@ -552,78 +552,150 @@
       let html = "";
 
       html += `
+  <div style="
+    position:relative;
+    padding:20px;
+    border-radius:18px;
+    background:linear-gradient(180deg, #141414, #0a0a0a);
+    box-shadow:0 10px 30px rgba(0,0,0,0.7);
+    text-align:left;
+  ">
+  `;
+
+      // 🔥 HEADER
+      html += `
+    <div style="margin-bottom:18px;">
+      <div style="
+        font-size:22px;
+        font-weight:900;
+        color:${e.color};
+        letter-spacing:0.5px;
+        margin-bottom:6px;
+      ">
+        ${e.competencia}
+      </div>
+
+      <div style="
+        font-size:16px;
+        font-weight:600;
+        color:#fff;
+        margin-bottom:4px;
+      ">
+        ${e.ubicacion}
+      </div>
+
+      ${obtenerEstadoEvento(e.fecha) ? `
+        <div style="
+          display:inline-block;
+          margin-top:4px;
+          padding:3px 8px;
+          font-size:11px;
+          font-weight:800;
+          border-radius:6px;
+          background:${obtenerEstadoEvento(e.fecha) === "HOY" ? "#1eff8a" : "#ffd400"};
+          color:#000;
+        ">
+          ${obtenerEstadoEvento(e.fecha)}
+        </div>
+      ` : ""}
+    </div>
+  `;
+
+      // 🔥 INFO PRINCIPAL
+      html += `
     <div style="
-  position:relative;
-  background:linear-gradient(180deg, #1a1a1a, #0f0f0f);
-  padding:20px;
-  border-radius:16px;
-  text-align:left;
-  box-shadow:0 6px 20px rgba(0,0,0,0.5);
-">
-  `;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:18px;
+    ">
 
-      html += `
-    <div style="font-size:22px; font-weight:bold; margin-bottom:10px;">
-      ${e.ubicacion}
+      <div style="background:#111; padding:10px; border-radius:10px;">
+        <div style="font-size:11px; color:#777;">Fecha</div>
+        <div style="font-size:15px; font-weight:700;">
+          ${formatearFecha(e.fecha)}
+        </div>
+      </div>
+
+      <div style="background:#111; padding:10px; border-radius:10px;">
+        <div style="font-size:11px; color:#777;">Horario</div>
+        <div style="font-size:15px; font-weight:700;">
+          ${formatearHora(e.horario)} HS
+        </div>
+      </div>
+
+      <div style="background:#111; padding:10px; border-radius:10px;">
+        <div style="font-size:11px; color:#777;">Modalidad</div>
+        <div style="font-size:15px; font-weight:700;">
+          ${e.modalidad.toUpperCase()}
+        </div>
+      </div>
+
+      <div style="background:#111; padding:10px; border-radius:10px;">
+        <div style="font-size:11px; color:#777;">Inscripción</div>
+        <div style="font-size:15px; font-weight:900;">
+          $${e.inscripcion}
+        </div>
+      </div>
+
     </div>
   `;
 
+      // 🔥 COLECTIVOS (placeholder editable)
       html += `
-    <div style="font-size:14px; color:#aaa; margin-bottom:5px;">
-      📅 ${e.fecha}
-    </div>
-  `;
-
-      html += `
-    <div style="font-size:14px; color:#aaa; margin-bottom:10px;">
-      ⏰ ${e.horario}
-    </div>
-  `;
-
-      html += `
-    <div style="margin-bottom:15px;">
-      <span style="
-        background:#222;
-        padding:6px 10px;
-        border-radius:8px;
+    <div style="margin-bottom:18px;">
+      <div style="
         font-size:13px;
-        margin-right:6px;
+        color:#888;
+        margin-bottom:6px;
       ">
-        ${e.modalidad}
-      </span>
+        Líneas cercanas
+      </div>
 
-      <span style="
-        background:#222;
-        padding:6px 10px;
-        border-radius:8px;
-        font-size:13px;
+      <div style="
+        font-size:14px;
+        font-weight:600;
+        color:#fff;
       ">
-        ${e.inscripcion} ${e.tipo}
+        ${e.colectivos || "A definir"}
+      </div>
+    </div>
+  `;
+
+      // 🔥 ORGANIZADOR
+      html += `
+    <div style="
+      margin-bottom:20px;
+      font-size:13px;
+      color:#aaa;
+    ">
+      Organiza: <span style="color:#fff; font-weight:600;">
+        ${e.creadorNombre || "Desconocido"}
       </span>
     </div>
   `;
 
+      // 🔥 BOTÓN BORRAR
       if (usuarioActual && auth.currentUser.uid === e.creadorId) {
-
         html += `
-    <button onclick="eliminarEvento(event, '${e.id}')" style="
-  position:absolute;
-  top:12px;
-  right:12px;
-  background:rgba(255,59,59,0.15);
-  border:1px solid rgba(255,59,59,0.5);
-  border-radius:10px;
-  padding:8px 10px;
-  color:#ff3b3b;
-  font-size:14px;
-  cursor:pointer;
-  backdrop-filter: blur(6px);
-">
-  🗑
-</button>
-  `;
+      <button onclick="eliminarEvento(event, '${e.id}')" style="
+        position:absolute;
+        top:12px;
+        right:12px;
+        background:rgba(255,59,59,0.12);
+        border:1px solid rgba(255,59,59,0.4);
+        border-radius:10px;
+        padding:8px 10px;
+        color:#ff3b3b;
+        font-size:13px;
+        cursor:pointer;
+      ">
+        Eliminar
+      </button>
+    `;
       }
 
+      // 🔥 VOLVER
       html += `
     <button onclick="volverInicio()" style="
       width:100%;
@@ -631,8 +703,8 @@
       background:#fff;
       color:#000;
       border:none;
-      border-radius:10px;
-      font-weight:bold;
+      border-radius:12px;
+      font-weight:800;
       margin-top:10px;
     ">
       Volver
