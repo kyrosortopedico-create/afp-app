@@ -874,6 +874,53 @@
       }
     }
 
+    function pantallaPlanillaEvento(evento) {
+
+      listaParticipantes = [];
+
+      let html = "<h2>Planilla</h2>";
+
+      html += `
+    <div style="margin-bottom:15px;">
+      <div style="margin-bottom:8px;">¿Cabezas de serie?</div>
+
+      <button onclick="setTipoPlanilla(true)" style="margin-right:10px;">Sí</button>
+      <button onclick="setTipoPlanilla(false)">No</button>
+    </div>
+
+    <div id="zonaCarga"></div>
+
+    <div id="lista"></div>
+
+    <button onclick="cerrarInscripcion()" style="
+      width:100%;
+      padding:14px;
+      background:#1eff8a;
+      color:#000;
+      border:none;
+      border-radius:12px;
+      font-weight:900;
+      margin-top:15px;
+    ">
+      Planilla Completa
+    </button>
+
+    <button onclick="volverInicio()" style="
+      width:100%;
+      padding:12px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      margin-top:10px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html, "adelante");
+    }
+
     function volverInicio() {
 
       contenido.style.transition = "transform 0.25s ease, opacity 0.2s ease";
@@ -1276,6 +1323,131 @@
       }
     }
 
+    function setTipoPlanilla(tieneCabezas) {
+
+      let html = "";
+
+      if (tieneCabezas) {
+
+        html += `
+      <div style="margin-bottom:10px;">
+        <div>Cabezas de serie</div>
+        <input id="inputCabeza" placeholder="Nombre">
+        <button onclick="agregarParticipante('cabeza')">Agregar</button>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <div>Competidores</div>
+        <input id="inputNormal" placeholder="Nombre">
+        <button onclick="agregarParticipante('normal')">Agregar</button>
+      </div>
+    `;
+
+      } else {
+
+        html += `
+      <div style="margin-bottom:10px;">
+        <div>Competidores</div>
+        <input id="inputNormal" placeholder="Nombre">
+        <button onclick="agregarParticipante('normal')">Agregar</button>
+      </div>
+    `;
+      }
+
+      document.getElementById("zonaCarga").innerHTML = html;
+    }
+
+    function agregarParticipante(tipo) {
+
+      let input = tipo === "cabeza"
+        ? document.getElementById("inputCabeza")
+        : document.getElementById("inputNormal");
+
+      if (!input || !input.value) return;
+
+      listaParticipantes.push({
+        nombre: input.value,
+        tipo: tipo
+      });
+
+      input.value = "";
+
+      renderLista();
+    }
+
+    function renderLista() {
+
+      let html = "";
+
+      listaParticipantes.forEach(p => {
+        html += `
+      <div style="padding:6px; border-bottom:1px solid #222;">
+        ${p.nombre} (${p.tipo})
+      </div>
+    `;
+      });
+
+      document.getElementById("lista").innerHTML = html;
+    }
+
+    function cerrarInscripcion() {
+
+      if (listaParticipantes.length < 2) {
+        mostrarNotificacion("Mínimo 2 participantes");
+        return;
+      }
+
+      const batallas = generarLlaves(listaParticipantes);
+
+      mostrarLlaves(batallas);
+    }
+
+    function mostrarLlaves(batallas) {
+
+      let html = "<h2>Llaves</h2>";
+
+      batallas.forEach((b, i) => {
+
+        html += `
+      <div style="
+        background:#111;
+        border:1px solid #222;
+        padding:14px;
+        border-radius:12px;
+        margin-bottom:10px;
+        text-align:left;
+      ">
+        <div style="font-weight:800; margin-bottom:8px;">
+          Batalla ${i + 1}
+        </div>
+    `;
+
+        b.forEach(p => {
+          html += `
+        <div>${p.nombre} ${p.tipo === "cabeza" ? "(cabeza)" : ""}</div>
+      `;
+        });
+
+        html += `</div>`;
+      });
+
+      html += `
+    <button onclick="volverInicio()" style="
+      width:100%;
+      padding:12px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      margin-top:10px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html, "adelante");
+    }
+
     async function pantallaPlanillas() {
 
       const querySnapshot = await getDocs(collection(db, "eventos"));
@@ -1328,6 +1500,7 @@
       </div>
     `;
       });
+
 
       html += `
     <button onclick="cambiarPantalla('organizadores')" style="
@@ -1609,6 +1782,132 @@
       listaParticipantes.splice(index, 1);
 
       renderLista();
+    }
+
+    function generarLlaves(participantes) {
+
+      const total = participantes.length;
+
+      // 🔥 detectar si hay clasificatorias
+      const hayClasificatoria = total >= 32;
+
+      // 🔥 cantidad de batallas
+      let cantidadBatallas = 8;
+
+      if (total >= 8 && total <= 15) cantidadBatallas = 4;
+      else if (total >= 16 && total <= 31) cantidadBatallas = 8;
+      else if (total >= 32) cantidadBatallas = 8; // base (después se ajusta según lógica)
+
+      // 🔥 separar cabezas y normales
+      let cabezas = participantes.filter(p => p.tipo === "cabeza");
+      let normales = participantes.filter(p => p.tipo !== "cabeza");
+
+      // 🔥 crear batallas vacías
+      let batallas = Array.from({ length: cantidadBatallas }, () => []);
+
+      // 🔥 PASO 1 — distribuir cabezas
+      let i = 0;
+      cabezas.forEach(c => {
+        batallas[i % cantidadBatallas].push(c);
+        i++;
+      });
+
+      // 🔥 PASO 2 — mezclar normales
+      normales = normales.sort(() => Math.random() - 0.5);
+
+      normales.forEach(n => {
+        // meter en la batalla con menos gente
+        let menor = batallas.reduce((min, b) =>
+          b.length < min.length ? b : min
+          , batallas[0]);
+
+        menor.push(n);
+      });
+
+      // 🔥 PASO 3 — ajustar distribución SOLO si es OCTAVOS SIN clasificatoria
+      if (!hayClasificatoria && cantidadBatallas === 8) {
+
+        let base = Math.floor(total / 8);
+        let sobrantes = total % 8;
+
+        let nuevaDistribucion = [];
+
+        for (let i = 0; i < 8; i++) {
+          if (i < sobrantes) {
+            nuevaDistribucion.push(base + 1);
+          } else {
+            nuevaDistribucion.push(base);
+          }
+        }
+
+        // 🔥 rearmar batallas con esa distribución
+        let todos = [...cabezas, ...normales];
+
+        let index = 0;
+        batallas = nuevaDistribucion.map(size => {
+          let grupo = todos.slice(index, index + size);
+          index += size;
+          return grupo;
+        });
+      }
+
+      return batallas;
+    }
+
+    function generarLlaves(participantes) {
+
+      const total = participantes.length;
+
+      let cantidadBatallas = 8;
+
+      if (total >= 8 && total <= 15) cantidadBatallas = 4;
+      else if (total >= 16 && total <= 31) cantidadBatallas = 8;
+      else if (total >= 32) cantidadBatallas = 8;
+
+      let cabezas = participantes.filter(p => p.tipo === "cabeza");
+      let normales = participantes.filter(p => p.tipo !== "cabeza");
+
+      let batallas = Array.from({ length: cantidadBatallas }, () => []);
+
+      let i = 0;
+      cabezas.forEach(c => {
+        batallas[i % cantidadBatallas].push(c);
+        i++;
+      });
+
+      normales = normales.sort(() => Math.random() - 0.5);
+
+      normales.forEach(n => {
+        let menor = batallas.reduce((min, b) =>
+          b.length < min.length ? b : min
+          , batallas[0]);
+
+        menor.push(n);
+      });
+
+      if (total >= 16 && total <= 31) {
+
+        let base = Math.floor(total / 8);
+        let sobrantes = total % 8;
+
+        let distribucion = [];
+
+        for (let i = 0; i < 8; i++) {
+          distribucion.push(i < sobrantes ? base + 1 : base);
+        }
+
+        let todos = [...cabezas, ...normales];
+
+        let index = 0;
+
+        batallas = distribucion.map(size => {
+          let grupo = todos.slice(index, index + size);
+          index += size;
+          return grupo;
+        });
+      }
+
+      return batallas;
     }
 
 
