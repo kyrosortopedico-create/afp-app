@@ -1600,13 +1600,29 @@
     </div>
   `;
 
+      html += `
+  <div id="infoPlanilla" style="
+    background:#111;
+    border:1px solid #222;
+    padding:12px;
+    border-radius:12px;
+    margin-top:10px;
+    text-align:left;
+    font-size:13px;
+    line-height:1.5;
+  "></div>
+`;
+
       // 🔥 LISTA
       html += `
-    <div id="listaParticipantes" style="
-      margin-top:20px;
-      text-align:left;
-    "></div>
-  `;
+  <div id="listaParticipantes" style="
+    margin-top:20px;
+    text-align:left;
+    max-height:220px;
+    overflow-y:auto;
+    padding-right:6px;
+  "></div>
+`;
 
       // 🔥 VOLVER
       html += `
@@ -1666,11 +1682,62 @@
     function renderLista() {
 
       const contenedor = document.getElementById("listaParticipantes");
+      const info = document.getElementById("infoPlanilla");
 
       if (!contenedor) return;
 
       let html = "";
 
+      let cabezas = listaParticipantes.filter(p => p.tipo === "cabeza").length;
+      let normales = listaParticipantes.filter(p => p.tipo !== "cabeza").length;
+      let total = listaParticipantes.length;
+
+      // 🔥 DETECTAR FASE
+      let fase = "";
+      let batallas = 0;
+
+      if (total >= 8 && total <= 15) {
+        fase = "Cuartos";
+        batallas = 4;
+      } else if (total >= 16 && total <= 31) {
+        fase = "Octavos";
+        batallas = 8;
+      } else if (total >= 32) {
+        fase = "Clasificatorias";
+        batallas = 8;
+      } else {
+        fase = "Insuficientes";
+      }
+
+      // 🔥 DISTRIBUCIÓN PREVIA
+      let distribucion = "";
+
+      if (fase === "Octavos") {
+        let base = Math.floor(total / 8);
+        let extra = total % 8;
+
+        let arr = [];
+
+        for (let i = 0; i < 8; i++) {
+          arr.push(i < extra ? base + 1 : base);
+        }
+
+        distribucion = arr.join(" - ");
+      }
+
+      // 🔥 INFO PANEL
+      if (info) {
+        info.innerHTML = `
+      <div><b>Total:</b> ${total}</div>
+      <div><b>Cabezas:</b> ${cabezas}</div>
+      <div><b>Competidores:</b> ${normales}</div>
+      <div><b>Fase:</b> ${fase}</div>
+      <div><b>Batallas:</b> ${batallas}</div>
+      ${distribucion ? `<div><b>Distribución:</b> ${distribucion}</div>` : ""}
+    `;
+      }
+
+      // 🔥 LISTA
       listaParticipantes.forEach((p, i) => {
 
         html += `
@@ -1711,7 +1778,6 @@
 
       contenedor.innerHTML = html;
     }
-
     function eliminarParticipante(index) {
 
       listaParticipantes.splice(index, 1);
