@@ -125,6 +125,7 @@
     let rondaActual = [];
     let ganadoresPorBatalla = 1;
     let ganadoresSeleccionados = {};
+    let esClasificatoria = false;
 
     window.pantallaPlanillas = pantallaPlanillas;
     window.seleccionarEventoPlanilla = seleccionarEventoPlanilla;
@@ -1499,6 +1500,9 @@
 
       ganadoresPorBatalla = pasan;
 
+      // 🔥 detectar si es clasificatoria
+      esClasificatoria = pasan > 1;
+
       const grupos = distribuirParticipantes(listaParticipantes, batallas);
 
       iniciarRonda(grupos);
@@ -1600,7 +1604,7 @@
 
     function siguienteRonda() {
 
-      // 🔥 validar todas las batallas
+      // 🔥 validar selección
       for (let i = 0; i < rondaActual.length; i++) {
 
         if (!ganadoresSeleccionados[i] ||
@@ -1615,21 +1619,33 @@
       let nuevos = [];
 
       rondaActual.forEach((batalla, i) => {
-
         ganadoresSeleccionados[i].forEach(index => {
           nuevos.push(batalla[index]);
         });
       });
 
-      // 🔥 FINAL
-      if (nuevos.length <= 1) {
+      // 🔥 SI ERA CLASIFICATORIA → PASA A ELIMINACIÓN
+      if (esClasificatoria) {
 
+        esClasificatoria = false;
+        ganadoresPorBatalla = 1; // 🔥 CLAVE
+
+        const batallas = distribuirParticipantes(nuevos, 8); // octavos
+
+        iniciarRonda(batallas);
+        return;
+      }
+
+      // 🔥 FINAL
+      if (nuevos.length === 1) {
         mostrarGanadorFinal(nuevos[0]);
         return;
       }
 
-      // 🔥 siguiente ronda
-      const nuevasBatallas = distribuirParticipantes(nuevos, Math.ceil(nuevos.length / 2));
+      // 🔥 SIGUIENTE RONDA NORMAL
+      const cantidadBatallas = Math.ceil(nuevos.length / 2);
+
+      const nuevasBatallas = distribuirParticipantes(nuevos, cantidadBatallas);
 
       iniciarRonda(nuevasBatallas);
     }
