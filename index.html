@@ -81,7 +81,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
     const firebaseConfig = {
@@ -1094,9 +1094,23 @@
           console.log("TOKEN:", token);
 
           if (auth.currentUser) {
-            await setDoc(doc(db, "tokens", auth.currentUser.uid), {
-              token
-            }, { merge: true });
+
+            // 🔥 BUSCAR SI YA EXISTE ESTE TOKEN
+            const q = query(collection(db, "tokens"), where("token", "==", token));
+            const snap = await getDocs(q);
+
+            // 🔥 SI NO EXISTE, LO GUARDA
+            if (snap.empty) {
+              await addDoc(collection(db, "tokens"), {
+                token: token,
+                uid: auth.currentUser.uid
+              });
+
+              console.log("Token guardado");
+            } else {
+              console.log("Token ya existe, no se duplica");
+            }
+
           }
 
         } else {
