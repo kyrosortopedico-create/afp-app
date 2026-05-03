@@ -107,6 +107,8 @@
     const loader = document.getElementById("loaderScreen");
     let usuarioActual = null;
     let deferredPrompt = null;
+    let listaParticipantes = [];
+    let tieneCabezasGlobal = false;
 
     window.mostrarLogin = mostrarLogin;
     window.mostrarRegistro = mostrarRegistro;
@@ -291,44 +293,68 @@
 
         html += `
     <div style="
-      background:#111;
-      border:1px solid #222;
-      padding:16px;
-      border-radius:16px;
-      margin-bottom:15px;
-      text-align:left;
-      box-shadow:0 6px 20px rgba(0,0,0,0.6);
-    ">
+  background:#111;
+  border:1px solid #222;
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:15px;
+  text-align:left;
+  box-shadow:0 6px 20px rgba(0,0,0,0.6);
+">
 
-      <div style="
-        font-size:16px;
-        font-weight:800;
-        margin-bottom:8px;
-      ">
-        Crear evento
-      </div>
+  <div style="font-size:16px; font-weight:800; margin-bottom:8px;">
+    Crear evento
+  </div>
 
-      <div style="
-        font-size:13px;
-        color:#aaa;
-        margin-bottom:12px;
-      ">
-        Publicá una nueva fecha para tu competencia
-      </div>
+  <div style="font-size:13px; color:#aaa; margin-bottom:12px;">
+    Publicá una nueva fecha para tu competencia
+  </div>
 
-      <button onclick="pantallaCrearEvento()" style="
-        width:100%;
-        padding:12px;
-        border:none;
-        border-radius:10px;
-        background:#fff;
-        color:#000;
-        font-weight:bold;
-      ">
-        Crear
-      </button>
+  <button onclick="pantallaCrearEvento()" style="
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#fff;
+    color:#000;
+    font-weight:bold;
+  ">
+    Crear
+  </button>
 
-    </div>
+</div>
+
+<div style="
+  background:#111;
+  border:1px solid #222;
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:15px;
+  text-align:left;
+  box-shadow:0 6px 20px rgba(0,0,0,0.6);
+">
+
+  <div style="font-size:16px; font-weight:800; margin-bottom:8px;">
+    Crear planilla
+  </div>
+
+  <div style="font-size:13px; color:#aaa; margin-bottom:12px;">
+    Administrá participantes y cruces del evento
+  </div>
+
+  <button onclick="pantallaPlanillas()" style="
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#fff;
+    color:#000;
+    font-weight:bold;
+  ">
+    Abrir
+  </button>
+
+</div>
   `;
 
         cambiarContenidoConAnimacion(html, "adelante");
@@ -1243,6 +1269,341 @@
       } catch (error) {
         console.error("Error notificaciones:", error);
       }
+    }
+
+    async function pantallaPlanillas() {
+
+      const querySnapshot = await getDocs(collection(db, "eventos"));
+
+      let misEventos = [];
+
+      querySnapshot.forEach(docSnap => {
+        const e = {
+          id: docSnap.id,
+          ...docSnap.data()
+        };
+
+        // 🔥 solo eventos del organizador
+        if (e.creadorId === auth.currentUser.uid && esEventoActivo(e.fecha)) {
+          misEventos.push(e);
+        }
+      });
+
+      let html = "<h2>Seleccionar evento</h2>";
+
+      if (misEventos.length === 0) {
+        html += "<p>No tenés eventos próximos</p>";
+      }
+
+      misEventos.forEach(e => {
+
+        html += `
+      <div onclick="seleccionarEventoPlanilla('${e.id}')" style="
+        background:#111;
+        border:1px solid #222;
+        padding:14px;
+        border-radius:12px;
+        margin-bottom:10px;
+        text-align:left;
+        cursor:pointer;
+      ">
+
+        <div style="font-weight:800; margin-bottom:4px;">
+          ${e.competencia}
+        </div>
+
+        <div style="font-size:13px; color:#aaa;">
+          ${e.ubicacion} • ${formatearFecha(e.fecha)}
+        </div>
+
+      </div>
+    `;
+      });
+
+      html += `
+    <button onclick="cambiarPantalla('organizadores')" style="
+      width:100%;
+      padding:12px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      margin-top:10px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html, "adelante");
+    }
+
+    function seleccionarEventoPlanilla(id) {
+
+      const evento = eventos.find(e => e.id === id);
+
+      if (!evento) {
+        mostrarNotificacion("Evento no encontrado");
+        return;
+      }
+
+      const estado = obtenerEstadoEvento(evento.fecha);
+
+      // 🔥 SI NO ES HOY → preguntar
+      if (estado !== "HOY") {
+
+        mostrarConfirmacion(
+          "Hoy no es el día del evento. ¿Seguro que querés entrar?",
+          () => abrirPlanilla(evento)
+        );
+
+        return;
+      }
+
+      // 🔥 SI ES HOY → entra directo
+      abrirPlanilla(evento);
+    }
+
+    function abrirPlanilla(evento) {
+
+      let html = `
+    <h2>Planilla</h2>
+
+    <div style="
+      background:#111;
+      border:1px solid #222;
+      padding:16px;
+      border-radius:16px;
+      margin-bottom:15px;
+      text-align:left;
+    ">
+
+      <div style="font-size:16px; font-weight:800; margin-bottom:6px;">
+        ${evento.competencia}
+      </div>
+
+      <div style="font-size:13px; color:#aaa;">
+        ${evento.ubicacion} • ${formatearFecha(evento.fecha)}
+      </div>
+
+    </div>
+
+    <div style="
+      margin-bottom:15px;
+      font-size:14px;
+      color:#ccc;
+    ">
+      Tu evento cuenta con Cabezas de Serie?
+    </div>
+
+    <div style="display:flex; gap:10px;">
+
+      <button onclick="planillaConCabezas(true)" style="
+        flex:1;
+        padding:12px;
+        border:none;
+        border-radius:10px;
+        background:#fff;
+        color:#000;
+        font-weight:bold;
+      ">
+        Sí
+      </button>
+
+      <button onclick="planillaConCabezas(false)" style="
+        flex:1;
+        padding:12px;
+        border:none;
+        border-radius:10px;
+        background:#222;
+        color:#fff;
+        font-weight:bold;
+      ">
+        No
+      </button>
+
+    </div>
+
+    <button onclick="pantallaPlanillas()" style="
+      width:100%;
+      padding:12px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      margin-top:15px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html, "adelante");
+    }
+
+    function planillaConCabezas(tieneCabezas) {
+
+      tieneCabezasGlobal = tieneCabezas;
+      listaParticipantes = [];
+
+      let html = `<h2>Planilla</h2>`;
+
+      // 🔥 BLOQUE CABEZAS
+      if (tieneCabezas) {
+
+        html += `
+      <div style="text-align:left; margin-bottom:15px;">
+
+        <div style="font-size:13px; color:#aaa; margin-bottom:6px;">
+          Cabezas de serie
+        </div>
+
+        <input id="inputCabeza" placeholder="Nombre" style="
+          width:100%;
+          padding:10px;
+          margin-bottom:8px;
+          box-sizing:border-box;
+        ">
+
+        <button onclick="agregarParticipante('cabeza')" style="
+          width:100%;
+          padding:10px;
+          margin-bottom:10px;
+        ">
+          Agregar
+        </button>
+
+      </div>
+    `;
+      }
+
+      // 🔥 BLOQUE COMPETIDORES
+      html += `
+    <div style="text-align:left; margin-bottom:15px;">
+
+      <div style="font-size:13px; color:#aaa; margin-bottom:6px;">
+        Competidores
+      </div>
+
+      <input id="inputCompetidor" placeholder="Nombre" style="
+        width:100%;
+        padding:10px;
+        margin-bottom:8px;
+        box-sizing:border-box;
+      ">
+
+      <button onclick="agregarParticipante('normal')" style="
+        width:100%;
+        padding:10px;
+      ">
+        Agregar
+      </button>
+
+    </div>
+  `;
+
+      // 🔥 LISTA
+      html += `
+    <div id="listaParticipantes" style="
+      margin-top:20px;
+      text-align:left;
+    "></div>
+  `;
+
+      // 🔥 VOLVER
+      html += `
+    <button onclick="pantallaPlanillas()" style="
+      width:100%;
+      padding:12px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      margin-top:15px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html, "adelante");
+    }
+
+    function agregarParticipante(tipo) {
+
+      let input;
+
+      if (tipo === "cabeza") {
+        input = document.getElementById("inputCabeza");
+      } else {
+        input = document.getElementById("inputCompetidor");
+      }
+
+      const nombre = input.value.trim();
+
+      if (!nombre) return;
+
+      listaParticipantes.push({
+        nombre,
+        tipo
+      });
+
+      input.value = "";
+
+      renderLista();
+    }
+
+    function renderLista() {
+
+      const contenedor = document.getElementById("listaParticipantes");
+
+      if (!contenedor) return;
+
+      let html = "";
+
+      listaParticipantes.forEach((p, i) => {
+
+        html += `
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        background:#111;
+        border:1px solid #222;
+        padding:10px;
+        border-radius:10px;
+        margin-bottom:8px;
+      ">
+
+        <div>
+          <div style="font-weight:700;">
+            ${p.nombre}
+          </div>
+
+          <div style="font-size:11px; color:#777;">
+            ${p.tipo === "cabeza" ? "Cabeza de serie" : "Competidor"}
+          </div>
+        </div>
+
+        <button onclick="eliminarParticipante(${i})" style="
+          background:#222;
+          color:#fff;
+          border:none;
+          padding:6px 10px;
+          border-radius:8px;
+        ">
+          X
+        </button>
+
+      </div>
+    `;
+      });
+
+      contenedor.innerHTML = html;
+    }
+
+    function eliminarParticipante(index) {
+
+      listaParticipantes.splice(index, 1);
+
+      renderLista();
     }
 
 
