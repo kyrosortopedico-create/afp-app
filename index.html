@@ -1278,15 +1278,19 @@
       let misEventos = [];
 
       querySnapshot.forEach(docSnap => {
+
         const e = {
           id: docSnap.id,
           ...docSnap.data()
         };
 
-        // 🔥 solo eventos del organizador
-        if (e.creadorId === auth.currentUser.uid && esEventoActivo(e.fecha)) {
+        if (
+          e.creadorId === auth.currentUser.uid &&
+          esEventoActivo(e.fecha)
+        ) {
           misEventos.push(e);
         }
+
       });
 
       let html = "<h2>Seleccionar evento</h2>";
@@ -1298,7 +1302,7 @@
       misEventos.forEach(e => {
 
         html += `
-      <div onclick="seleccionarEventoPlanilla('${e.id}')" style="
+      <div onclick='seleccionarEventoPlanilla(${JSON.stringify(e)})' style="
         background:#111;
         border:1px solid #222;
         padding:14px;
@@ -1337,9 +1341,7 @@
       cambiarContenidoConAnimacion(html, "adelante");
     }
 
-    function seleccionarEventoPlanilla(id) {
-
-      const evento = eventos.find(e => e.id === id);
+    function seleccionarEventoPlanilla(evento) {
 
       if (!evento) {
         mostrarNotificacion("Evento no encontrado");
@@ -1348,7 +1350,6 @@
 
       const estado = obtenerEstadoEvento(evento.fecha);
 
-      // 🔥 SI NO ES HOY → preguntar
       if (estado !== "HOY") {
 
         mostrarConfirmacion(
@@ -1359,7 +1360,6 @@
         return;
       }
 
-      // 🔥 SI ES HOY → entra directo
       abrirPlanilla(evento);
     }
 
