@@ -131,17 +131,21 @@
           const docRef = doc(db, "usuarios", user.uid);
           const docSnap = await getDoc(docRef);
 
+          let data = null;
+
           if (docSnap.exists()) {
-            const data = docSnap.data();
+            data = docSnap.data();
             usuarioActual = data;
             document.getElementById("usernameDisplay").innerText = data.username;
           }
 
           cambiarPantalla("inicio");
           menu.style.display = "flex";
+
           const btnOrg = document.getElementById("btnOrganizadores");
 
-          if (data.rol === "organizador") {
+          // 🔥 VALIDACIÓN SEGURA
+          if (data && data.rol === "organizador") {
             btnOrg.style.display = "block";
           } else {
             btnOrg.style.display = "none";
