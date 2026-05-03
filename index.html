@@ -776,7 +776,8 @@
           competencia,
           color,
           creado: Date.now(),
-          creadorId: auth.currentUser.uid
+          creadorId: auth.currentUser.uid,
+          creadorNombre: usuarioActual.username
         });
 
         mostrarNotificacion("Evento creado");
