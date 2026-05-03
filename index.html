@@ -122,6 +122,9 @@
     let deferredPrompt = null;
     let listaParticipantes = [];
     let tieneCabezasGlobal = false;
+    let rondaActual = [];
+    let ganadoresPorBatalla = 1;
+    let ganadoresSeleccionados = {};
 
     window.pantallaPlanillas = pantallaPlanillas;
     window.seleccionarEventoPlanilla = seleccionarEventoPlanilla;
@@ -146,6 +149,8 @@
     window.decisionClasificatoria_32_47 = decisionClasificatoria_32_47;
     window.decisionOctavos = decisionOctavos;
     window.confirmarFormato = confirmarFormato;
+    window.toggleGanador = toggleGanador;
+    window.siguienteRonda = siguienteRonda;
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -1492,9 +1497,174 @@
 
     function confirmarFormato(batallas, pasan) {
 
+      ganadoresPorBatalla = pasan;
+
       const grupos = distribuirParticipantes(listaParticipantes, batallas);
 
-      mostrarLlaves(grupos);
+      iniciarRonda(grupos);
+    }
+
+    function iniciarRonda(grupos) {
+
+      rondaActual = grupos;
+      ganadoresSeleccionados = {};
+
+      renderRonda();
+    }
+
+    function renderRonda() {
+
+      let html = "<h2>Ronda</h2>";
+
+      rondaActual.forEach((batalla, i) => {
+
+        html += `
+      <div style="
+        background:#111;
+        border:1px solid #222;
+        padding:14px;
+        border-radius:12px;
+        margin-bottom:10px;
+        text-align:left;
+      ">
+
+        <div style="font-weight:800; margin-bottom:8px;">
+          Batalla ${i + 1}
+        </div>
+    `;
+
+        batalla.forEach((p, index) => {
+
+          const seleccionado = ganadoresSeleccionados[i]?.includes(index);
+
+          html += `
+        <div onclick="toggleGanador(${i}, ${index})" style="
+          padding:8px;
+          border-radius:8px;
+          margin-bottom:6px;
+          cursor:pointer;
+          background:${seleccionado ? "#1eff8a" : "#0f0f0f"};
+          color:${seleccionado ? "#000" : "#fff"};
+        ">
+          ${p.nombre}
+        </div>
+      `;
+        });
+
+        html += `</div>`;
+      });
+
+      html += `
+    <button onclick="siguienteRonda()" style="
+      width:100%;
+      padding:14px;
+      background:#fff;
+      color:#000;
+      border:none;
+      border-radius:12px;
+      font-weight:900;
+      margin-top:10px;
+    ">
+      Siguiente ronda
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html);
+    }
+
+    function toggleGanador(batallaIndex, participanteIndex) {
+
+      if (!ganadoresSeleccionados[batallaIndex]) {
+        ganadoresSeleccionados[batallaIndex] = [];
+      }
+
+      let lista = ganadoresSeleccionados[batallaIndex];
+
+      // ya seleccionado → sacar
+      if (lista.includes(participanteIndex)) {
+        ganadoresSeleccionados[batallaIndex] =
+          lista.filter(i => i !== participanteIndex);
+      } else {
+
+        // límite de ganadores por batalla
+        if (lista.length >= ganadoresPorBatalla) {
+          mostrarNotificacion(`Solo podés elegir ${ganadoresPorBatalla}`);
+          return;
+        }
+
+        lista.push(participanteIndex);
+      }
+
+      renderRonda();
+    }
+
+    function siguienteRonda() {
+
+      // 🔥 validar todas las batallas
+      for (let i = 0; i < rondaActual.length; i++) {
+
+        if (!ganadoresSeleccionados[i] ||
+          ganadoresSeleccionados[i].length !== ganadoresPorBatalla) {
+
+          mostrarNotificacion("Faltan seleccionar ganadores");
+          return;
+        }
+      }
+
+      // 🔥 juntar ganadores
+      let nuevos = [];
+
+      rondaActual.forEach((batalla, i) => {
+
+        ganadoresSeleccionados[i].forEach(index => {
+          nuevos.push(batalla[index]);
+        });
+      });
+
+      // 🔥 FINAL
+      if (nuevos.length <= 1) {
+
+        mostrarGanadorFinal(nuevos[0]);
+        return;
+      }
+
+      // 🔥 siguiente ronda
+      const nuevasBatallas = distribuirParticipantes(nuevos, Math.ceil(nuevos.length / 2));
+
+      iniciarRonda(nuevasBatallas);
+    }
+
+    function mostrarGanadorFinal(ganador) {
+
+      let html = `
+    <h2>Ganador</h2>
+
+    <div style="
+      background:#1eff8a;
+      color:#000;
+      padding:20px;
+      border-radius:16px;
+      font-size:20px;
+      font-weight:900;
+      text-align:center;
+    ">
+      ${ganador.nombre}
+    </div>
+
+    <button onclick="volverInicio()" style="
+      width:100%;
+      padding:12px;
+      margin-top:15px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html);
     }
 
     function distribuirParticipantes(participantes, batallas) {
