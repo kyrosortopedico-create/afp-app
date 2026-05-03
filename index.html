@@ -10,6 +10,19 @@
 
 <body style="margin:0; font-family:sans-serif; background:#0a0a0a; color:white;">
   <style>
+    #listaParticipantes::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #listaParticipantes::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 10px;
+    }
+
+    #listaParticipantes::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
     #contenido {
       opacity: 1;
       transition: opacity 0.2s ease;
@@ -129,6 +142,10 @@
     window.eliminarEvento = eliminarEvento;
     window.cerrarInscripcion = cerrarInscripcion;
     window.renderLista = renderLista;
+    window.mostrarDecisionFormato = mostrarDecisionFormato;
+    window.decisionClasificatoria_32_47 = decisionClasificatoria_32_47;
+    window.decisionOctavos = decisionOctavos;
+    window.confirmarFormato = confirmarFormato;
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -1314,14 +1331,198 @@
 
     function cerrarInscripcion() {
 
-      if (listaParticipantes.length < 2) {
+      const total = listaParticipantes.length;
+
+      if (total < 2) {
         mostrarNotificacion("Mínimo 2 participantes");
         return;
       }
 
-      const batallas = generarLlaves(listaParticipantes);
+      // 🔹 HASTA 31 → automático
+      if (total <= 31) {
 
+        const batallas = generarLlaves(listaParticipantes);
+        mostrarLlaves(batallas);
+        return;
+      }
+
+      // 🔹 DESDE 32 → pantalla de decisión
+      mostrarDecisionFormato(total);
+    }
+
+    function mostrarDecisionFormato(total) {
+
+      let html = `<h2>Formato</h2>`;
+
+      html += `
+    <div style="
+      background:#111;
+      border:1px solid #222;
+      padding:14px;
+      border-radius:12px;
+      margin-bottom:15px;
+      text-align:left;
+    ">
+      Total: ${total}
+    </div>
+  `;
+
+      // 🔴 CASO 32–47
+      if (total >= 32 && total <= 47) {
+
+        html += `
+      <div style="margin-bottom:10px;">¿Cómo querés arrancar?</div>
+
+      <button onclick="decisionOctavos(${total})" style="width:100%; margin-bottom:10px;">
+        Octavos (8 batallas - pasa 1)
+      </button>
+
+      <button onclick="decisionClasificatoria_32_47(${total})" style="width:100%;">
+        Clasificatorias
+      </button>
+    `;
+      }
+
+      // 🔴 CASO 48–63
+      else if (total >= 48 && total <= 63) {
+
+        html += generarOpciones([
+          { batallas: 8, pasan: 3 },
+          { batallas: 12, pasan: 2 }
+        ], total);
+      }
+
+      // 🔴 CASO 64+
+      else if (total >= 64) {
+
+        html += generarOpciones([
+          { batallas: 8, pasan: 4 },
+          { batallas: 16, pasan: 2 }
+        ], total);
+      }
+
+      html += `
+    <button onclick="volverInicio()" style="
+      width:100%;
+      padding:12px;
+      margin-top:15px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html);
+    }
+
+    function decisionClasificatoria_32_47(total) {
+
+      let html = `<h2>Clasificatorias</h2>`;
+
+      html += generarOpciones([
+        { batallas: 8, pasan: 2 },
+        { batallas: 16, pasan: 1 }
+      ], total);
+
+      cambiarContenidoConAnimacion(html);
+    }
+
+    function decisionOctavos(total) {
+
+      const batallas = generarLlaves(listaParticipantes);
       mostrarLlaves(batallas);
+    }
+
+    function generarOpciones(opciones, total) {
+
+      let html = "";
+
+      opciones.forEach(op => {
+
+        const distribucion = calcularDistribucion(total, op.batallas);
+
+        html += `
+      <div style="
+        background:#111;
+        border:1px solid #222;
+        padding:14px;
+        border-radius:12px;
+        margin-bottom:10px;
+        text-align:left;
+      ">
+
+        <div style="font-weight:800; margin-bottom:6px;">
+          ${op.batallas} Batallas - pasan ${op.pasan}
+        </div>
+
+        <div style="font-size:12px; color:#aaa;">
+          ${distribucion}
+        </div>
+
+        <button onclick="confirmarFormato(${op.batallas}, ${op.pasan})" style="
+          width:100%;
+          margin-top:10px;
+        ">
+          Elegir
+        </button>
+
+      </div>
+    `;
+      });
+
+      return html;
+    }
+
+    function calcularDistribucion(total, batallas) {
+
+      let base = Math.floor(total / batallas);
+      let extra = total % batallas;
+
+      let arr = [];
+
+      for (let i = 0; i < batallas; i++) {
+        arr.push(i < extra ? base + 1 : base);
+      }
+
+      return `Distribución: ${arr.join(" - ")} (${batallas} batallas)`;
+    }
+
+    function confirmarFormato(batallas, pasan) {
+
+      const grupos = distribuirParticipantes(listaParticipantes, batallas);
+
+      mostrarLlaves(grupos);
+    }
+
+    function distribuirParticipantes(participantes, batallas) {
+
+      let cabezas = participantes.filter(p => p.tipo === "cabeza");
+      let normales = participantes.filter(p => p.tipo !== "cabeza");
+
+      let grupos = Array.from({ length: batallas }, () => []);
+
+      // 🔥 cabezas primero
+      let i = 0;
+      cabezas.forEach(c => {
+        grupos[i % batallas].push(c);
+        i++;
+      });
+
+      // 🔥 mezclar normales
+      normales = normales.sort(() => Math.random() - 0.5);
+
+      normales.forEach(n => {
+        let menor = grupos.reduce((min, g) =>
+          g.length < min.length ? g : min
+          , grupos[0]);
+
+        menor.push(n);
+      });
+
+      return grupos;
     }
 
     function mostrarLlaves(batallas) {
