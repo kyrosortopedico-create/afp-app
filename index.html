@@ -122,9 +122,11 @@
     let deferredPrompt = null;
     let listaParticipantes = [];
     let tieneCabezasGlobal = false;
+
+    let eventoPlanillaActual = null;
     let rondaActual = [];
-    let ganadoresPorBatalla = 1;
     let ganadoresSeleccionados = {};
+    let ganadoresPorBatalla = 1;
     let esClasificatoria = false;
 
     window.pantallaPlanillas = pantallaPlanillas;
@@ -1245,6 +1247,44 @@
       }, 2500);
     }
 
+    async function guardarEstadoPlanilla() {
+
+      if (!eventoPlanillaActual) return;
+
+      await setDoc(doc(db, "planillas", eventoPlanillaActual.id), {
+        eventoId: eventoPlanillaActual.id,
+
+        participantes: listaParticipantes,
+        rondaActual: rondaActual,
+
+        ganadoresSeleccionados: ganadoresSeleccionados,
+        ganadoresPorBatalla: ganadoresPorBatalla,
+        esClasificatoria: esClasificatoria,
+
+        timestamp: Date.now()
+      });
+    }
+
+    async function cargarEstadoPlanilla(eventoId) {
+
+      const snap = await getDoc(doc(db, "planillas", eventoId));
+
+      if (!snap.exists()) return false;
+
+      const data = snap.data();
+
+      listaParticipantes = data.participantes || [];
+      rondaActual = data.rondaActual || [];
+
+      ganadoresSeleccionados = data.ganadoresSeleccionados || {};
+      ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
+      esClasificatoria = data.esClasificatoria || false;
+
+      renderRonda();
+
+      return true;
+    }
+
     async function activarNotificaciones() {
 
       try {
@@ -1348,6 +1388,12 @@
       if (total <= 31) {
 
         const batallas = generarLlaves(listaParticipantes);
+
+        rondaActual = batallas;
+        ganadoresSeleccionados = {};
+
+        guardarEstadoPlanilla();
+
         mostrarLlaves(batallas);
         return;
       }
@@ -1513,6 +1559,8 @@
       rondaActual = grupos;
       ganadoresSeleccionados = {};
 
+      guardarEstadoPlanilla(); // 🔥 CLAVE
+
       renderRonda();
     }
 
@@ -1600,6 +1648,7 @@
       }
 
       renderRonda();
+      guardarEstadoPlanilla();
     }
 
     function siguienteRonda() {
@@ -1633,6 +1682,7 @@
         const batallas = distribuirParticipantes(nuevos, 8); // octavos
 
         iniciarRonda(batallas);
+        guardarEstadoPlanilla();
         return;
       }
 
@@ -1648,6 +1698,7 @@
       const nuevasBatallas = distribuirParticipantes(nuevos, cantidadBatallas);
 
       iniciarRonda(nuevasBatallas);
+      guardarEstadoPlanilla();
     }
 
     function mostrarGanadorFinal(ganador) {
@@ -1850,7 +1901,13 @@
       abrirPlanilla(evento);
     }
 
-    function abrirPlanilla(evento) {
+    async function abrirPlanilla(evento) {
+
+      eventoPlanillaActual = evento;
+
+      const existe = await cargarEstadoPlanilla(evento.id);
+
+      if (existe) return;
 
       let html = `
     <h2>Planilla</h2>
@@ -1874,53 +1931,12 @@
 
     </div>
 
-    <div style="
-      margin-bottom:15px;
-      font-size:14px;
-      color:#ccc;
-    ">
-      Tu evento cuenta con Cabezas de Serie?
+    <div style="margin-bottom:15px;">
+      ¿Tu evento tiene cabezas de serie?
     </div>
 
-    <div style="display:flex; gap:10px;">
-
-      <button onclick="planillaConCabezas(true)" style="
-        flex:1;
-        padding:12px;
-        border:none;
-        border-radius:10px;
-        background:#fff;
-        color:#000;
-        font-weight:bold;
-      ">
-        Sí
-      </button>
-
-      <button onclick="planillaConCabezas(false)" style="
-        flex:1;
-        padding:12px;
-        border:none;
-        border-radius:10px;
-        background:#222;
-        color:#fff;
-        font-weight:bold;
-      ">
-        No
-      </button>
-
-    </div>
-
-    <button onclick="pantallaPlanillas()" style="
-      width:100%;
-      padding:12px;
-      background:#222;
-      color:#fff;
-      border:none;
-      border-radius:10px;
-      margin-top:15px;
-    ">
-      Volver
-    </button>
+    <button onclick="planillaConCabezas(true)" style="width:100%; margin-bottom:10px;">Sí</button>
+    <button onclick="planillaConCabezas(false)" style="width:100%;">No</button>
   `;
 
       cambiarContenidoConAnimacion(html, "adelante");
@@ -2064,6 +2080,7 @@
       input.value = "";
 
       renderLista();
+      guardarEstadoPlanilla();
     }
 
     function renderLista() {
@@ -2165,11 +2182,13 @@
 
       contenedor.innerHTML = html;
     }
+
     function eliminarParticipante(index) {
 
       listaParticipantes.splice(index, 1);
 
       renderLista();
+      guardarEstadoPlanilla();
     }
 
     function generarLlaves(participantes) {
