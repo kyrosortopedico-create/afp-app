@@ -1122,13 +1122,6 @@
       }
     }
 
-    onMessage(messaging, (payload) => {
-      console.log("Notificación recibida:", payload);
-
-      mostrarNotificacion(
-        payload?.notification?.title || payload?.data?.title || "AFP"
-      );
-    });
 
   </script>
 
