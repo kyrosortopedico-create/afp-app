@@ -1275,7 +1275,7 @@
       const data = snap.data();
 
       listaParticipantes = data.participantes || [];
-      rondaActual = data.rondaActual || [];
+      rondaActual = JSON.parse(JSON.stringify(data.rondaActual || []));
 
       ganadoresSeleccionados = data.ganadoresSeleccionados || {};
       ganadoresSeleccionados = JSON.parse(JSON.stringify(ganadoresSeleccionados));
@@ -1283,7 +1283,7 @@
       esClasificatoria = data.esClasificatoria || false;
       tieneCabezasGlobal = data.tieneCabezas || false;
 
-      // 🔥 DECISIÓN INTELIGENTE
+
       // 🔥 DETECTAR SI HAY RONDA REAL (no vacía ni corrupta)
       const hayRondaValida =
         Array.isArray(rondaActual) &&
@@ -2014,7 +2014,23 @@ Sí
         // 🔥 SI → cargar ronda
         modal.querySelector("#siBtn").onclick = async () => {
           overlay.remove();
-          await cargarEstadoPlanilla(evento.id);
+
+          const cargado = await cargarEstadoPlanilla(evento.id);
+
+          // 🔥 SI FALLA, FORZAR PARTICIPANTES
+          if (!cargado) {
+            const snap = await getDoc(doc(db, "planillas", evento.id));
+            const data = snap.data();
+
+            listaParticipantes = data?.participantes || [];
+            tieneCabezasGlobal = data?.tieneCabezas || false;
+
+            rondaActual = [];
+            ganadoresSeleccionados = {};
+
+            planillaConCabezas(tieneCabezasGlobal);
+            renderLista();
+          }
         };
 
         // 🔥 NO → solo participantes
