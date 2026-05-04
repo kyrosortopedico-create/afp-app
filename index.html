@@ -1284,9 +1284,15 @@
       tieneCabezasGlobal = data.tieneCabezas || false;
 
       // 🔥 DECISIÓN INTELIGENTE
-      if (Array.isArray(rondaActual) && rondaActual.length > 0) {
+      // 🔥 DETECTAR SI HAY RONDA REAL (no vacía ni corrupta)
+      const hayRondaValida =
+        Array.isArray(rondaActual) &&
+        rondaActual.length > 0 &&
+        Array.isArray(rondaActual[0]) &&
+        rondaActual[0].length > 0;
 
-        // 🔥 FORZAR RECONSTRUCCIÓN LIMPIA
+      if (hayRondaValida) {
+
         rondaActual = JSON.parse(JSON.stringify(rondaActual));
 
         renderRonda();
