@@ -1285,13 +1285,8 @@
 
 
       // 🔥 DETECTAR SI HAY RONDA REAL (no vacía ni corrupta)
-      const hayRondaValida =
-        Array.isArray(rondaActual) &&
-        rondaActual.length > 0 &&
-        Array.isArray(rondaActual[0]) &&
-        rondaActual[0].length > 0;
-
-      if (hayRondaValida) {
+      // 🔥 SI EXISTE RONDA → SIEMPRE PRIORIDAD
+      if (Array.isArray(rondaActual) && rondaActual.length > 0) {
 
         rondaActual = JSON.parse(JSON.stringify(rondaActual));
 
@@ -1299,6 +1294,7 @@
         return true;
       }
 
+      // 🔥 SI NO HAY RONDA → PARTICIPANTES
       if (listaParticipantes && listaParticipantes.length > 0) {
         planillaConCabezas(tieneCabezasGlobal);
         renderLista();
