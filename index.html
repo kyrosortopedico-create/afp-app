@@ -1975,15 +1975,36 @@ Sí
 
           overlay.remove();
 
-          const cargado = await cargarEstadoPlanilla(evento.id);
+          const snap = await getDoc(doc(db, "planillas", evento.id));
 
-          if (!cargado) {
-            listaParticipantes = [];
-            rondaActual = [];
-            ganadoresSeleccionados = {};
-
+          if (!snap.exists()) {
             planillaConCabezas(false);
+            return;
           }
+
+          const data = snap.data();
+
+          // 🔥 SI HAY RONDA → PRIORIDAD TOTAL
+          if (data.rondaActual && data.rondaActual.length > 0) {
+
+            rondaActual = data.rondaActual;
+            ganadoresSeleccionados = data.ganadoresSeleccionados || {};
+            ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
+            esClasificatoria = data.esClasificatoria || false;
+
+            renderRonda();
+            return;
+          }
+
+          // 🔥 SI NO HAY RONDA → LISTA
+          listaParticipantes = data.participantes || [];
+          tieneCabezasGlobal = data.tieneCabezas || false;
+
+          planillaConCabezas(tieneCabezasGlobal);
+
+          setTimeout(() => {
+            renderLista();
+          }, 50);
         };
 
         // 🔥 NO → solo participantes
@@ -2361,39 +2382,6 @@ Sí
       return batallas;
     }
 
-    async function cargarEstadoPlanilla(eventoId) {
-
-      const snap = await getDoc(doc(db, "planillas", eventoId));
-
-      if (!snap.exists()) return false;
-
-      const data = snap.data();
-
-      listaParticipantes = data.participantes || [];
-      rondaActual = data.rondaActual || [];
-
-      ganadoresSeleccionados = data.ganadoresSeleccionados || {};
-      ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
-      esClasificatoria = data.esClasificatoria || false;
-      tieneCabezasGlobal = data.tieneCabezas || false;
-
-      if (rondaActual && rondaActual.length > 0) {
-        renderRonda();
-        return true;
-      }
-
-      if (listaParticipantes && listaParticipantes.length > 0) {
-        planillaConCabezas(tieneCabezasGlobal);
-
-        setTimeout(() => {
-          renderLista();
-        }, 0);
-
-        return true;
-      }
-
-      return false;
-    }
 
 
   </script>
