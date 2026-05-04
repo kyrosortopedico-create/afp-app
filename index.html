@@ -1284,8 +1284,11 @@
       tieneCabezasGlobal = data.tieneCabezas || false;
 
       // 🔥 DECISIÓN INTELIGENTE
-      if (rondaActual && rondaActual.length > 0) {
-        // 🔥 NO recalcular nada, usar lo guardado
+      if (Array.isArray(rondaActual) && rondaActual.length > 0) {
+
+        // 🔥 FORZAR RECONSTRUCCIÓN LIMPIA
+        rondaActual = JSON.parse(JSON.stringify(rondaActual));
+
         renderRonda();
         return true;
       }
@@ -1935,35 +1938,94 @@
       // 🔥 SI EXISTE PLANILLA → preguntar
       if (snap.exists()) {
 
-        mostrarConfirmacion(
-          "¿Querés volver donde lo dejaste?",
-          async () => {
-            // ✅ SI → carga completa
-            await cargarEstadoPlanilla(evento.id);
-          }
-        );
+        // 🔥 MODAL CONTROLADO (SIN setTimeout roto)
+        const overlay = document.createElement("div");
 
-        // 🔥 botón cancelar = NO → cargar solo participantes
+        overlay.style = `
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+display:flex;
+align-items:flex-end;
+justify-content:center;
+z-index:9999;
+`;
+
+        const modal = document.createElement("div");
+
+        modal.style = `
+width:90%;
+max-width:400px;
+background:#111;
+border-radius:20px 20px 0 0;
+padding:20px;
+box-shadow:0 -10px 30px rgba(0,0,0,0.6);
+transform:translateY(100%);
+transition:transform 0.3s ease;
+`;
+
+        modal.innerHTML = `
+<div style="font-size:16px; margin-bottom:20px;">
+¿Querés volver donde lo dejaste?
+</div>
+
+<div style="display:flex; gap:10px;">
+<button id="noBtn" style="
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#222;
+color:#fff;
+">
+No
+</button>
+
+<button id="siBtn" style="
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#1eff8a;
+color:#000;
+font-weight:bold;
+">
+Sí
+</button>
+</div>
+`;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
         setTimeout(() => {
-          const btnCancelar = document.querySelector("#cancelarBtn");
-          if (btnCancelar) {
-            btnCancelar.onclick = async () => {
+          modal.style.transform = "translateY(0)";
+        }, 10);
 
-              document.querySelector("body > div:last-child")?.remove();
+        // 🔥 SI → cargar ronda
+        modal.querySelector("#siBtn").onclick = async () => {
+          overlay.remove();
+          await cargarEstadoPlanilla(evento.id);
+        };
 
-              const data = snap.data();
+        // 🔥 NO → solo participantes
+        modal.querySelector("#noBtn").onclick = async () => {
+          overlay.remove();
 
-              listaParticipantes = data.participantes || [];
-              tieneCabezasGlobal = data.tieneCabezas || false;
+          const data = snap.data();
 
-              rondaActual = [];
-              ganadoresSeleccionados = {};
+          listaParticipantes = data.participantes || [];
+          tieneCabezasGlobal = data.tieneCabezas || false;
 
-              planillaConCabezas(tieneCabezasGlobal);
-              renderLista();
-            };
-          }
-        }, 50);
+          rondaActual = [];
+          ganadoresSeleccionados = {};
+
+          planillaConCabezas(tieneCabezasGlobal);
+          renderLista();
+        };
 
         return;
       }
