@@ -1985,7 +1985,13 @@ Sí
           const data = snap.data();
 
           // 🔥 SI HAY RONDA → PRIORIDAD TOTAL
-          if (data.rondaActual && data.rondaActual.length > 0) {
+          const hayRondaReal =
+            Array.isArray(data.rondaActual) &&
+            data.rondaActual.length > 0 &&
+            Array.isArray(data.rondaActual[0]) &&
+            data.rondaActual[0].length > 0;
+
+          if (hayRondaReal) {
 
             rondaActual = data.rondaActual;
             ganadoresSeleccionados = data.ganadoresSeleccionados || {};
