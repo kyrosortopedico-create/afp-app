@@ -1266,34 +1266,6 @@
       });
     }
 
-    async function cargarEstadoPlanilla(eventoId) {
-
-      const snap = await getDoc(doc(db, "planillas", eventoId));
-
-      if (!snap.exists()) return false;
-
-      const data = snap.data();
-
-      listaParticipantes = data.participantes || [];
-      rondaActual = JSON.parse(JSON.stringify(data.rondaActual || []));
-
-      ganadoresSeleccionados = JSON.parse(JSON.stringify(data.ganadoresSeleccionados || {}));
-      ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
-      esClasificatoria = data.esClasificatoria || false;
-      tieneCabezasGlobal = data.tieneCabezas || false;
-
-      // 🔥 SOLO DEVUELVE ESTADO, NO RENDERIZA
-      if (Array.isArray(rondaActual) && rondaActual.length > 0) {
-        return "RONDA";
-      }
-
-      if (listaParticipantes && listaParticipantes.length > 0) {
-        return "LISTA";
-      }
-
-      return false;
-    }
-
     async function activarNotificaciones() {
 
       try {
@@ -1394,16 +1366,6 @@
       }
 
       // 🔥 SI YA HAY RONDA → NO REINICIAR
-      const hayRonda =
-        Array.isArray(rondaActual) &&
-        rondaActual.length > 0 &&
-        Array.isArray(rondaActual[0]) &&
-        rondaActual[0].length > 0;
-
-      if (hayRonda) {
-        renderRonda();
-        return;
-      }
 
       // 🔹 HASTA 31 → automático
       if (total <= 31) {
@@ -2009,33 +1971,19 @@ Sí
           modal.style.transform = "translateY(0)";
         }, 10);
 
-
         modal.querySelector("#siBtn").onclick = async () => {
 
           overlay.remove();
 
-          const estado = await cargarEstadoPlanilla(evento.id);
+          const cargado = await cargarEstadoPlanilla(evento.id);
 
-          // 🔥 sincroniza con el DOM (CLAVE)
-          await new Promise(r => requestAnimationFrame(r));
+          if (!cargado) {
+            listaParticipantes = [];
+            rondaActual = [];
+            ganadoresSeleccionados = {};
 
-          if (estado === "RONDA") {
-            renderRonda();
-            return;
+            planillaConCabezas(false);
           }
-
-          if (estado === "LISTA") {
-            planillaConCabezas(tieneCabezasGlobal);
-
-            setTimeout(() => {
-              renderLista();
-            }, 50);
-
-            return;
-          }
-
-          // fallback
-          planillaConCabezas(false);
         };
 
         // 🔥 NO → solo participantes
@@ -2411,6 +2359,40 @@ Sí
       }
 
       return batallas;
+    }
+
+    async function cargarEstadoPlanilla(eventoId) {
+
+      const snap = await getDoc(doc(db, "planillas", eventoId));
+
+      if (!snap.exists()) return false;
+
+      const data = snap.data();
+
+      listaParticipantes = data.participantes || [];
+      rondaActual = data.rondaActual || [];
+
+      ganadoresSeleccionados = data.ganadoresSeleccionados || {};
+      ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
+      esClasificatoria = data.esClasificatoria || false;
+      tieneCabezasGlobal = data.tieneCabezas || false;
+
+      if (rondaActual && rondaActual.length > 0) {
+        renderRonda();
+        return true;
+      }
+
+      if (listaParticipantes && listaParticipantes.length > 0) {
+        planillaConCabezas(tieneCabezasGlobal);
+
+        setTimeout(() => {
+          renderLista();
+        }, 0);
+
+        return true;
+      }
+
+      return false;
     }
 
 
