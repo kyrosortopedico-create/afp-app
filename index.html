@@ -1921,11 +1921,45 @@
 
       eventoPlanillaActual = evento;
 
-      const existe = await cargarEstadoPlanilla(evento.id);
+      const snap = await getDoc(doc(db, "planillas", evento.id));
 
-      if (existe === true) return;
+      // 🔥 SI EXISTE PLANILLA → preguntar
+      if (snap.exists()) {
 
-      // 🔥 SI NO EXISTE, ARRANCA NORMAL
+        mostrarConfirmacion(
+          "¿Querés volver donde lo dejaste?",
+          async () => {
+            // ✅ SI → carga completa
+            await cargarEstadoPlanilla(evento.id);
+          }
+        );
+
+        // 🔥 botón cancelar = NO → cargar solo participantes
+        setTimeout(() => {
+          const btnCancelar = document.querySelector("#cancelarBtn");
+          if (btnCancelar) {
+            btnCancelar.onclick = async () => {
+
+              document.querySelector("body > div:last-child")?.remove();
+
+              const data = snap.data();
+
+              listaParticipantes = data.participantes || [];
+              tieneCabezasGlobal = data.tieneCabezas || false;
+
+              rondaActual = [];
+              ganadoresSeleccionados = {};
+
+              planillaConCabezas(tieneCabezasGlobal);
+              renderLista();
+            };
+          }
+        }, 50);
+
+        return;
+      }
+
+      // 🔥 SI NO EXISTE → flujo normal
       let html = `
     <h2>Planilla</h2>
 
