@@ -1277,28 +1277,18 @@
       listaParticipantes = data.participantes || [];
       rondaActual = JSON.parse(JSON.stringify(data.rondaActual || []));
 
-      ganadoresSeleccionados = data.ganadoresSeleccionados || {};
-      ganadoresSeleccionados = JSON.parse(JSON.stringify(ganadoresSeleccionados));
+      ganadoresSeleccionados = JSON.parse(JSON.stringify(data.ganadoresSeleccionados || {}));
       ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
       esClasificatoria = data.esClasificatoria || false;
       tieneCabezasGlobal = data.tieneCabezas || false;
 
-
-      // 🔥 DETECTAR SI HAY RONDA REAL (no vacía ni corrupta)
-      // 🔥 SI EXISTE RONDA → SIEMPRE PRIORIDAD
+      // 🔥 SOLO DEVUELVE ESTADO, NO RENDERIZA
       if (Array.isArray(rondaActual) && rondaActual.length > 0) {
-
-        rondaActual = JSON.parse(JSON.stringify(rondaActual));
-
-        renderRonda();
-        return true;
+        return "RONDA";
       }
 
-      // 🔥 SI NO HAY RONDA → PARTICIPANTES
       if (listaParticipantes && listaParticipantes.length > 0) {
-        planillaConCabezas(tieneCabezasGlobal);
-        renderLista();
-        return true;
+        return "LISTA";
       }
 
       return false;
@@ -2019,26 +2009,33 @@ Sí
           modal.style.transform = "translateY(0)";
         }, 10);
 
-        // 🔥 SI → cargar ronda
+
         modal.querySelector("#siBtn").onclick = async () => {
+
           overlay.remove();
 
-          const cargado = await cargarEstadoPlanilla(evento.id);
+          const estado = await cargarEstadoPlanilla(evento.id);
 
-          // 🔥 SI FALLA, FORZAR PARTICIPANTES
-          if (!cargado) {
-            const snap = await getDoc(doc(db, "planillas", evento.id));
-            const data = snap.data();
+          // 🔥 sincroniza con el DOM (CLAVE)
+          await new Promise(r => requestAnimationFrame(r));
 
-            listaParticipantes = data?.participantes || [];
-            tieneCabezasGlobal = data?.tieneCabezas || false;
-
-            rondaActual = [];
-            ganadoresSeleccionados = {};
-
-            planillaConCabezas(tieneCabezasGlobal);
-            renderLista();
+          if (estado === "RONDA") {
+            renderRonda();
+            return;
           }
+
+          if (estado === "LISTA") {
+            planillaConCabezas(tieneCabezasGlobal);
+
+            setTimeout(() => {
+              renderLista();
+            }, 50);
+
+            return;
+          }
+
+          // fallback
+          planillaConCabezas(false);
         };
 
         // 🔥 NO → solo participantes
