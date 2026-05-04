@@ -1278,84 +1278,89 @@
       rondaActual = data.rondaActual || [];
 
       ganadoresSeleccionados = data.ganadoresSeleccionados || {};
+      ganadoresSeleccionados = JSON.parse(JSON.stringify(ganadoresSeleccionados));
       ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
       esClasificatoria = data.esClasificatoria || false;
       tieneCabezasGlobal = data.tieneCabezas || false;
 
       // 🔥 DECISIÓN INTELIGENTE
       if (rondaActual && rondaActual.length > 0) {
+        // 🔥 NO recalcular nada, usar lo guardado
         renderRonda();
-      } else if (listaParticipantes && listaParticipantes.length > 0) {
+        return true;
+      }
+
+      if (listaParticipantes && listaParticipantes.length > 0) {
         planillaConCabezas(tieneCabezasGlobal);
         renderLista();
+        return true;
       }
 
-      return true;
-    }
+      return false;
 
-    async function activarNotificaciones() {
+      async function activarNotificaciones() {
 
-      try {
+        try {
 
-        // 🔹 evitar pedir permiso mil veces
-        let permiso = Notification.permission;
+          // 🔹 evitar pedir permiso mil veces
+          let permiso = Notification.permission;
 
-        if (permiso !== "granted") {
-          permiso = await Notification.requestPermission();
-        }
-
-        if (permiso !== "granted") {
-          console.log("Permiso denegado");
-          return;
-        }
-
-        // 🔥 REGISTRO DEL SERVICE WORKER (CLAVE)
-        const registration = await navigator.serviceWorker.register("/afp-app/firebase-messaging-sw.js");
-
-        const token = await getToken(messaging, {
-          vapidKey: "BAPihskMt-2p5NFcwwYgu0PX6OLFiHv7E5EICE17huCZpP-nZRSab9zuptdcpGV6Za8S7_UIxk5_GZksuHqeayk",
-          serviceWorkerRegistration: registration
-        });
-
-        if (token) {
-          console.log("TOKEN:", token);
-
-          if (auth.currentUser) {
-
-            // 🔥 BUSCAR SI YA EXISTE ESTE TOKEN
-            const q = query(collection(db, "tokens"), where("token", "==", token));
-            const snap = await getDocs(q);
-
-            // 🔥 SI NO EXISTE, LO GUARDA
-            if (snap.empty) {
-              await addDoc(collection(db, "tokens"), {
-                token: token,
-                uid: auth.currentUser.uid
-              });
-
-              console.log("Token guardado");
-            } else {
-              console.log("Token ya existe, no se duplica");
-            }
-
+          if (permiso !== "granted") {
+            permiso = await Notification.requestPermission();
           }
 
-        } else {
-          console.log("No se pudo obtener token");
+          if (permiso !== "granted") {
+            console.log("Permiso denegado");
+            return;
+          }
+
+          // 🔥 REGISTRO DEL SERVICE WORKER (CLAVE)
+          const registration = await navigator.serviceWorker.register("/afp-app/firebase-messaging-sw.js");
+
+          const token = await getToken(messaging, {
+            vapidKey: "BAPihskMt-2p5NFcwwYgu0PX6OLFiHv7E5EICE17huCZpP-nZRSab9zuptdcpGV6Za8S7_UIxk5_GZksuHqeayk",
+            serviceWorkerRegistration: registration
+          });
+
+          if (token) {
+            console.log("TOKEN:", token);
+
+            if (auth.currentUser) {
+
+              // 🔥 BUSCAR SI YA EXISTE ESTE TOKEN
+              const q = query(collection(db, "tokens"), where("token", "==", token));
+              const snap = await getDocs(q);
+
+              // 🔥 SI NO EXISTE, LO GUARDA
+              if (snap.empty) {
+                await addDoc(collection(db, "tokens"), {
+                  token: token,
+                  uid: auth.currentUser.uid
+                });
+
+                console.log("Token guardado");
+              } else {
+                console.log("Token ya existe, no se duplica");
+              }
+
+            }
+
+          } else {
+            console.log("No se pudo obtener token");
+          }
+
+        } catch (error) {
+          console.error("Error notificaciones:", error);
         }
-
-      } catch (error) {
-        console.error("Error notificaciones:", error);
       }
-    }
 
-    function setTipoPlanilla(tieneCabezas) {
+      function setTipoPlanilla(tieneCabezas) {
 
-      let html = "";
+        let html = "";
 
-      if (tieneCabezas) {
+        if (tieneCabezas) {
 
-        html += `
+          html += `
       <div style="margin-bottom:10px;">
         <div>Cabezas de serie</div>
         <input id="inputCabeza" placeholder="Nombre">
@@ -1369,52 +1374,52 @@
       </div>
     `;
 
-      } else {
+        } else {
 
-        html += `
+          html += `
       <div style="margin-bottom:10px;">
         <div>Competidores</div>
         <input id="inputNormal" placeholder="Nombre">
         <button onclick="agregarParticipante('normal')">Agregar</button>
       </div>
     `;
+        }
+
+        document.getElementById("zonaCarga").innerHTML = html;
       }
 
-      document.getElementById("zonaCarga").innerHTML = html;
-    }
+      function cerrarInscripcion() {
 
-    function cerrarInscripcion() {
+        const total = listaParticipantes.length;
 
-      const total = listaParticipantes.length;
+        if (total < 2) {
+          mostrarNotificacion("Mínimo 2 participantes");
+          return;
+        }
 
-      if (total < 2) {
-        mostrarNotificacion("Mínimo 2 participantes");
-        return;
+        // 🔹 HASTA 31 → automático
+        if (total <= 31) {
+
+          const batallas = generarLlaves(listaParticipantes);
+
+          rondaActual = batallas;
+          ganadoresSeleccionados = {};
+
+          guardarEstadoPlanilla();
+
+          mostrarLlaves(batallas);
+          return;
+        }
+
+        // 🔹 DESDE 32 → pantalla de decisión
+        mostrarDecisionFormato(total);
       }
 
-      // 🔹 HASTA 31 → automático
-      if (total <= 31) {
+      function mostrarDecisionFormato(total) {
 
-        const batallas = generarLlaves(listaParticipantes);
+        let html = `<h2>Formato</h2>`;
 
-        rondaActual = batallas;
-        ganadoresSeleccionados = {};
-
-        guardarEstadoPlanilla();
-
-        mostrarLlaves(batallas);
-        return;
-      }
-
-      // 🔹 DESDE 32 → pantalla de decisión
-      mostrarDecisionFormato(total);
-    }
-
-    function mostrarDecisionFormato(total) {
-
-      let html = `<h2>Formato</h2>`;
-
-      html += `
+        html += `
     <div style="
       background:#111;
       border:1px solid #222;
@@ -1427,10 +1432,10 @@
     </div>
   `;
 
-      // 🔴 CASO 32–47
-      if (total >= 32 && total <= 47) {
+        // 🔴 CASO 32–47
+        if (total >= 32 && total <= 47) {
 
-        html += `
+          html += `
       <div style="margin-bottom:10px;">¿Cómo querés arrancar?</div>
 
       <button onclick="decisionOctavos(${total})" style="width:100%; margin-bottom:10px;">
@@ -1441,27 +1446,27 @@
         Clasificatorias
       </button>
     `;
-      }
+        }
 
-      // 🔴 CASO 48–63
-      else if (total >= 48 && total <= 63) {
+        // 🔴 CASO 48–63
+        else if (total >= 48 && total <= 63) {
 
-        html += generarOpciones([
-          { batallas: 8, pasan: 3 },
-          { batallas: 12, pasan: 2 }
-        ], total);
-      }
+          html += generarOpciones([
+            { batallas: 8, pasan: 3 },
+            { batallas: 12, pasan: 2 }
+          ], total);
+        }
 
-      // 🔴 CASO 64+
-      else if (total >= 64) {
+        // 🔴 CASO 64+
+        else if (total >= 64) {
 
-        html += generarOpciones([
-          { batallas: 8, pasan: 4 },
-          { batallas: 16, pasan: 2 }
-        ], total);
-      }
+          html += generarOpciones([
+            { batallas: 8, pasan: 4 },
+            { batallas: 16, pasan: 2 }
+          ], total);
+        }
 
-      html += `
+        html += `
     <button onclick="volverInicio()" style="
       width:100%;
       padding:12px;
@@ -1475,36 +1480,36 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html);
-    }
+        cambiarContenidoConAnimacion(html);
+      }
 
-    function decisionClasificatoria_32_47(total) {
+      function decisionClasificatoria_32_47(total) {
 
-      let html = `<h2>Clasificatorias</h2>`;
+        let html = `<h2>Clasificatorias</h2>`;
 
-      html += generarOpciones([
-        { batallas: 8, pasan: 2 },
-        { batallas: 16, pasan: 1 }
-      ], total);
+        html += generarOpciones([
+          { batallas: 8, pasan: 2 },
+          { batallas: 16, pasan: 1 }
+        ], total);
 
-      cambiarContenidoConAnimacion(html);
-    }
+        cambiarContenidoConAnimacion(html);
+      }
 
-    function decisionOctavos(total) {
+      function decisionOctavos(total) {
 
-      const batallas = generarLlaves(listaParticipantes);
-      mostrarLlaves(batallas);
-    }
+        const batallas = generarLlaves(listaParticipantes);
+        mostrarLlaves(batallas);
+      }
 
-    function generarOpciones(opciones, total) {
+      function generarOpciones(opciones, total) {
 
-      let html = "";
+        let html = "";
 
-      opciones.forEach(op => {
+        opciones.forEach(op => {
 
-        const distribucion = calcularDistribucion(total, op.batallas);
+          const distribucion = calcularDistribucion(total, op.batallas);
 
-        html += `
+          html += `
       <div style="
         background:#111;
         border:1px solid #222;
@@ -1531,54 +1536,56 @@
 
       </div>
     `;
-      });
+        });
 
-      return html;
-    }
-
-    function calcularDistribucion(total, batallas) {
-
-      let base = Math.floor(total / batallas);
-      let extra = total % batallas;
-
-      let arr = [];
-
-      for (let i = 0; i < batallas; i++) {
-        arr.push(i < extra ? base + 1 : base);
+        return html;
       }
 
-      return `Distribución: ${arr.join(" - ")} (${batallas} batallas)`;
-    }
+      function calcularDistribucion(total, batallas) {
 
-    function confirmarFormato(batallas, pasan) {
+        let base = Math.floor(total / batallas);
+        let extra = total % batallas;
 
-      ganadoresPorBatalla = pasan;
+        let arr = [];
 
-      // 🔥 detectar si es clasificatoria
-      esClasificatoria = pasan > 1;
+        for (let i = 0; i < batallas; i++) {
+          arr.push(i < extra ? base + 1 : base);
+        }
 
-      const grupos = distribuirParticipantes(listaParticipantes, batallas);
+        return `Distribución: ${arr.join(" - ")} (${batallas} batallas)`;
+      }
 
-      iniciarRonda(grupos);
-    }
+      function confirmarFormato(batallas, pasan) {
 
-    function iniciarRonda(grupos) {
+        ganadoresPorBatalla = pasan;
 
-      rondaActual = grupos;
-      ganadoresSeleccionados = {};
+        // 🔥 detectar si es clasificatoria
+        esClasificatoria = pasan > 1;
 
-      guardarEstadoPlanilla(); // 🔥 CLAVE
+        const grupos = distribuirParticipantes(listaParticipantes, batallas);
 
-      renderRonda();
-    }
+        iniciarRonda(grupos);
+      }
 
-    function renderRonda() {
+      function iniciarRonda(grupos) {
 
-      let html = "<h2>Ronda</h2>";
+        rondaActual = grupos;
+        ganadoresSeleccionados = {};
 
-      rondaActual.forEach((batalla, i) => {
+        guardarEstadoPlanilla(); // 🔥 CLAVE
 
-        html += `
+        renderRonda();
+      }
+
+      function renderRonda() {
+
+        if (!rondaActual || rondaActual.length === 0) return;
+
+        let html = "<h2>Ronda</h2>";
+
+        rondaActual.forEach((batalla, i) => {
+
+          html += `
       <div style="
         background:#111;
         border:1px solid #222;
@@ -1593,11 +1600,11 @@
         </div>
     `;
 
-        batalla.forEach((p, index) => {
+          batalla.forEach((p, index) => {
 
-          const seleccionado = ganadoresSeleccionados[i]?.includes(index);
+            const seleccionado = ganadoresSeleccionados[i]?.includes(index);
 
-          html += `
+            html += `
         <div onclick="toggleGanador(${i}, ${index})" style="
           padding:8px;
           border-radius:8px;
@@ -1609,12 +1616,12 @@
           ${p.nombre}
         </div>
       `;
+          });
+
+          html += `</div>`;
         });
 
-        html += `</div>`;
-      });
-
-      html += `
+        html += `
     <button onclick="siguienteRonda()" style="
       width:100%;
       padding:14px;
@@ -1629,89 +1636,89 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html);
-    }
-
-    function toggleGanador(batallaIndex, participanteIndex) {
-
-      if (!ganadoresSeleccionados[batallaIndex]) {
-        ganadoresSeleccionados[batallaIndex] = [];
+        cambiarContenidoConAnimacion(html);
       }
 
-      let lista = ganadoresSeleccionados[batallaIndex];
+      function toggleGanador(batallaIndex, participanteIndex) {
 
-      // ya seleccionado → sacar
-      if (lista.includes(participanteIndex)) {
-        ganadoresSeleccionados[batallaIndex] =
-          lista.filter(i => i !== participanteIndex);
-      } else {
-
-        // límite de ganadores por batalla
-        if (lista.length >= ganadoresPorBatalla) {
-          mostrarNotificacion(`Solo podés elegir ${ganadoresPorBatalla}`);
-          return;
+        if (!ganadoresSeleccionados[batallaIndex]) {
+          ganadoresSeleccionados[batallaIndex] = [];
         }
 
-        lista.push(participanteIndex);
-      }
+        let lista = ganadoresSeleccionados[batallaIndex];
 
-      renderRonda();
-      guardarEstadoPlanilla();
-    }
+        // ya seleccionado → sacar
+        if (lista.includes(participanteIndex)) {
+          ganadoresSeleccionados[batallaIndex] =
+            lista.filter(i => i !== participanteIndex);
+        } else {
 
-    function siguienteRonda() {
+          // límite de ganadores por batalla
+          if (lista.length >= ganadoresPorBatalla) {
+            mostrarNotificacion(`Solo podés elegir ${ganadoresPorBatalla}`);
+            return;
+          }
 
-      // 🔥 validar selección
-      for (let i = 0; i < rondaActual.length; i++) {
-
-        if (!ganadoresSeleccionados[i] ||
-          ganadoresSeleccionados[i].length !== ganadoresPorBatalla) {
-
-          mostrarNotificacion("Faltan seleccionar ganadores");
-          return;
+          lista.push(participanteIndex);
         }
-      }
 
-      // 🔥 juntar ganadores
-      let nuevos = [];
-
-      rondaActual.forEach((batalla, i) => {
-        ganadoresSeleccionados[i].forEach(index => {
-          nuevos.push(batalla[index]);
-        });
-      });
-
-      // 🔥 SI ERA CLASIFICATORIA → PASA A ELIMINACIÓN
-      if (esClasificatoria) {
-
-        esClasificatoria = false;
-        ganadoresPorBatalla = 1; // 🔥 CLAVE
-
-        const batallas = distribuirParticipantes(nuevos, 8); // octavos
-
-        iniciarRonda(batallas);
+        renderRonda();
         guardarEstadoPlanilla();
-        return;
       }
 
-      // 🔥 FINAL
-      if (nuevos.length === 1) {
-        mostrarGanadorFinal(nuevos[0]);
-        return;
+      function siguienteRonda() {
+
+        // 🔥 validar selección
+        for (let i = 0; i < rondaActual.length; i++) {
+
+          if (!ganadoresSeleccionados[i] ||
+            ganadoresSeleccionados[i].length !== ganadoresPorBatalla) {
+
+            mostrarNotificacion("Faltan seleccionar ganadores");
+            return;
+          }
+        }
+
+        // 🔥 juntar ganadores
+        let nuevos = [];
+
+        rondaActual.forEach((batalla, i) => {
+          ganadoresSeleccionados[i].forEach(index => {
+            nuevos.push(batalla[index]);
+          });
+        });
+
+        // 🔥 SI ERA CLASIFICATORIA → PASA A ELIMINACIÓN
+        if (esClasificatoria) {
+
+          esClasificatoria = false;
+          ganadoresPorBatalla = 1; // 🔥 CLAVE
+
+          const batallas = distribuirParticipantes(nuevos, 8); // octavos
+
+          iniciarRonda(batallas);
+          guardarEstadoPlanilla();
+          return;
+        }
+
+        // 🔥 FINAL
+        if (nuevos.length === 1) {
+          mostrarGanadorFinal(nuevos[0]);
+          return;
+        }
+
+        // 🔥 SIGUIENTE RONDA NORMAL
+        const cantidadBatallas = Math.ceil(nuevos.length / 2);
+
+        const nuevasBatallas = distribuirParticipantes(nuevos, cantidadBatallas);
+
+        iniciarRonda(nuevasBatallas);
+        guardarEstadoPlanilla();
       }
 
-      // 🔥 SIGUIENTE RONDA NORMAL
-      const cantidadBatallas = Math.ceil(nuevos.length / 2);
+      function mostrarGanadorFinal(ganador) {
 
-      const nuevasBatallas = distribuirParticipantes(nuevos, cantidadBatallas);
-
-      iniciarRonda(nuevasBatallas);
-      guardarEstadoPlanilla();
-    }
-
-    function mostrarGanadorFinal(ganador) {
-
-      let html = `
+        let html = `
     <h2>Ganador</h2>
 
     <div style="
@@ -1739,44 +1746,44 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html);
-    }
+        cambiarContenidoConAnimacion(html);
+      }
 
-    function distribuirParticipantes(participantes, batallas) {
+      function distribuirParticipantes(participantes, batallas) {
 
-      let cabezas = participantes.filter(p => p.tipo === "cabeza");
-      let normales = participantes.filter(p => p.tipo !== "cabeza");
+        let cabezas = participantes.filter(p => p.tipo === "cabeza");
+        let normales = participantes.filter(p => p.tipo !== "cabeza");
 
-      let grupos = Array.from({ length: batallas }, () => []);
+        let grupos = Array.from({ length: batallas }, () => []);
 
-      // 🔥 cabezas primero
-      let i = 0;
-      cabezas.forEach(c => {
-        grupos[i % batallas].push(c);
-        i++;
-      });
+        // 🔥 cabezas primero
+        let i = 0;
+        cabezas.forEach(c => {
+          grupos[i % batallas].push(c);
+          i++;
+        });
 
-      // 🔥 mezclar normales
-      normales = normales.sort(() => Math.random() - 0.5);
+        // 🔥 mezclar normales
+        normales = normales.sort(() => Math.random() - 0.5);
 
-      normales.forEach(n => {
-        let menor = grupos.reduce((min, g) =>
-          g.length < min.length ? g : min
-          , grupos[0]);
+        normales.forEach(n => {
+          let menor = grupos.reduce((min, g) =>
+            g.length < min.length ? g : min
+            , grupos[0]);
 
-        menor.push(n);
-      });
+          menor.push(n);
+        });
 
-      return grupos;
-    }
+        return grupos;
+      }
 
-    function mostrarLlaves(batallas) {
+      function mostrarLlaves(batallas) {
 
-      let html = "<h2>Llaves</h2>";
+        let html = "<h2>Llaves</h2>";
 
-      batallas.forEach((b, i) => {
+        batallas.forEach((b, i) => {
 
-        html += `
+          html += `
       <div style="
         background:#111;
         border:1px solid #222;
@@ -1790,16 +1797,16 @@
         </div>
     `;
 
-        b.forEach(p => {
-          html += `
+          b.forEach(p => {
+            html += `
         <div>${p.nombre} ${p.tipo === "cabeza" ? "(cabeza)" : ""}</div>
       `;
+          });
+
+          html += `</div>`;
         });
 
-        html += `</div>`;
-      });
-
-      html += `
+        html += `
     <button onclick="volverInicio()" style="
       width:100%;
       padding:12px;
@@ -1813,40 +1820,40 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html, "adelante");
-    }
-
-    async function pantallaPlanillas() {
-
-      const querySnapshot = await getDocs(collection(db, "eventos"));
-
-      let misEventos = [];
-
-      querySnapshot.forEach(docSnap => {
-
-        const e = {
-          id: docSnap.id,
-          ...docSnap.data()
-        };
-
-        if (
-          e.creadorId === auth.currentUser.uid &&
-          esEventoActivo(e.fecha)
-        ) {
-          misEventos.push(e);
-        }
-
-      });
-
-      let html = "<h2>Seleccionar evento</h2>";
-
-      if (misEventos.length === 0) {
-        html += "<p>No tenés eventos próximos</p>";
+        cambiarContenidoConAnimacion(html, "adelante");
       }
 
-      misEventos.forEach(e => {
+      async function pantallaPlanillas() {
 
-        html += `
+        const querySnapshot = await getDocs(collection(db, "eventos"));
+
+        let misEventos = [];
+
+        querySnapshot.forEach(docSnap => {
+
+          const e = {
+            id: docSnap.id,
+            ...docSnap.data()
+          };
+
+          if (
+            e.creadorId === auth.currentUser.uid &&
+            esEventoActivo(e.fecha)
+          ) {
+            misEventos.push(e);
+          }
+
+        });
+
+        let html = "<h2>Seleccionar evento</h2>";
+
+        if (misEventos.length === 0) {
+          html += "<p>No tenés eventos próximos</p>";
+        }
+
+        misEventos.forEach(e => {
+
+          html += `
       <div onclick='seleccionarEventoPlanilla(${JSON.stringify(e)})' style="
         background:#111;
         border:1px solid #222;
@@ -1867,10 +1874,10 @@
 
       </div>
     `;
-      });
+        });
 
 
-      html += `
+        html += `
     <button onclick="cambiarPantalla('organizadores')" style="
       width:100%;
       padding:12px;
@@ -1884,41 +1891,41 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html, "adelante");
-    }
-
-    function seleccionarEventoPlanilla(evento) {
-
-      if (!evento) {
-        mostrarNotificacion("Evento no encontrado");
-        return;
+        cambiarContenidoConAnimacion(html, "adelante");
       }
 
-      const estado = obtenerEstadoEvento(evento.fecha);
+      function seleccionarEventoPlanilla(evento) {
 
-      if (estado !== "HOY") {
+        if (!evento) {
+          mostrarNotificacion("Evento no encontrado");
+          return;
+        }
 
-        mostrarConfirmacion(
-          "Hoy no es el día del evento. ¿Seguro que querés entrar?",
-          () => abrirPlanilla(evento)
-        );
+        const estado = obtenerEstadoEvento(evento.fecha);
 
-        return;
+        if (estado !== "HOY") {
+
+          mostrarConfirmacion(
+            "Hoy no es el día del evento. ¿Seguro que querés entrar?",
+            () => abrirPlanilla(evento)
+          );
+
+          return;
+        }
+
+        abrirPlanilla(evento);
       }
 
-      abrirPlanilla(evento);
-    }
+      async function abrirPlanilla(evento) {
 
-    async function abrirPlanilla(evento) {
+        eventoPlanillaActual = evento;
 
-      eventoPlanillaActual = evento;
+        const existe = await cargarEstadoPlanilla(evento.id);
 
-      const existe = await cargarEstadoPlanilla(evento.id);
+        if (existe === true) return;
 
-      if (existe) return;
-
-      // 🔥 SI NO EXISTE, ARRANCA NORMAL
-      let html = `
+        // 🔥 SI NO EXISTE, ARRANCA NORMAL
+        let html = `
     <h2>Planilla</h2>
 
     <div style="
@@ -1948,23 +1955,23 @@
     <button onclick="planillaConCabezas(false)" style="width:100%;">No</button>
   `;
 
-      cambiarContenidoConAnimacion(html, "adelante");
-    }
-
-    function planillaConCabezas(tieneCabezas) {
-
-      tieneCabezasGlobal = tieneCabezas;
-
-      if (!listaParticipantes || listaParticipantes.length === 0) {
-        listaParticipantes = [];
+        cambiarContenidoConAnimacion(html, "adelante");
       }
 
-      let html = `<h2>Planilla</h2>`;
+      function planillaConCabezas(tieneCabezas) {
 
-      // 🔥 BLOQUE CABEZAS
-      if (tieneCabezas) {
+        tieneCabezasGlobal = tieneCabezas;
 
-        html += `
+        if (!listaParticipantes || listaParticipantes.length === 0) {
+          listaParticipantes = [];
+        }
+
+        let html = `<h2>Planilla</h2>`;
+
+        // 🔥 BLOQUE CABEZAS
+        if (tieneCabezas) {
+
+          html += `
       <div style="text-align:left; margin-bottom:15px;">
 
         <div style="font-size:13px; color:#aaa; margin-bottom:6px;">
@@ -1988,10 +1995,10 @@
 
       </div>
     `;
-      }
+        }
 
-      // 🔥 BLOQUE COMPETIDORES
-      html += `
+        // 🔥 BLOQUE COMPETIDORES
+        html += `
     <div style="text-align:left; margin-bottom:15px;">
 
       <div style="font-size:13px; color:#aaa; margin-bottom:6px;">
@@ -2015,7 +2022,7 @@
     </div>
   `;
 
-      html += `
+        html += `
   <div id="infoPlanilla" style="
     background:#111;
     border:1px solid #222;
@@ -2028,8 +2035,8 @@
   "></div>
 `;
 
-      // 🔥 LISTA
-      html += `
+        // 🔥 LISTA
+        html += `
   <div id="listaParticipantes" style="
     margin-top:20px;
     text-align:left;
@@ -2039,8 +2046,8 @@
   "></div>
 `;
 
-      // 🔥 VOLVER
-      html += `
+        // 🔥 VOLVER
+        html += `
     <button onclick="cerrarInscripcion()" style="
       width:100%;
       padding:14px;
@@ -2067,83 +2074,83 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html, "adelante");
-    }
-
-    function agregarParticipante(tipo) {
-
-      let input;
-
-      if (tipo === "cabeza") {
-        input = document.getElementById("inputCabeza");
-      } else {
-        input = document.getElementById("inputCompetidor");
+        cambiarContenidoConAnimacion(html, "adelante");
       }
 
-      const nombre = input.value.trim();
+      function agregarParticipante(tipo) {
 
-      if (!nombre) return;
+        let input;
 
-      listaParticipantes.push({
-        nombre,
-        tipo
-      });
-
-      input.value = "";
-
-      renderLista();
-      guardarEstadoPlanilla();
-    }
-
-    function renderLista() {
-
-      const contenedor = document.getElementById("listaParticipantes");
-      const info = document.getElementById("infoPlanilla");
-
-      if (!contenedor) return;
-
-      let html = "";
-
-      let cabezas = listaParticipantes.filter(p => p.tipo === "cabeza").length;
-      let normales = listaParticipantes.filter(p => p.tipo !== "cabeza").length;
-      let total = listaParticipantes.length;
-
-      // 🔥 DETECTAR FASE
-      let fase = "";
-      let batallas = 0;
-
-      if (total >= 8 && total <= 15) {
-        fase = "Cuartos";
-        batallas = 4;
-      } else if (total >= 16 && total <= 31) {
-        fase = "Octavos";
-        batallas = 8;
-      } else if (total >= 32) {
-        fase = "Clasificatorias";
-        batallas = 8;
-      } else {
-        fase = "Insuficientes";
-      }
-
-      // 🔥 DISTRIBUCIÓN PREVIA
-      let distribucion = "";
-
-      if (fase === "Octavos") {
-        let base = Math.floor(total / 8);
-        let extra = total % 8;
-
-        let arr = [];
-
-        for (let i = 0; i < 8; i++) {
-          arr.push(i < extra ? base + 1 : base);
+        if (tipo === "cabeza") {
+          input = document.getElementById("inputCabeza");
+        } else {
+          input = document.getElementById("inputCompetidor");
         }
 
-        distribucion = arr.join(" - ");
+        const nombre = input.value.trim();
+
+        if (!nombre) return;
+
+        listaParticipantes.push({
+          nombre,
+          tipo
+        });
+
+        input.value = "";
+
+        renderLista();
+        guardarEstadoPlanilla();
       }
 
-      // 🔥 INFO PANEL
-      if (info) {
-        info.innerHTML = `
+      function renderLista() {
+
+        const contenedor = document.getElementById("listaParticipantes");
+        const info = document.getElementById("infoPlanilla");
+
+        if (!contenedor) return;
+
+        let html = "";
+
+        let cabezas = listaParticipantes.filter(p => p.tipo === "cabeza").length;
+        let normales = listaParticipantes.filter(p => p.tipo !== "cabeza").length;
+        let total = listaParticipantes.length;
+
+        // 🔥 DETECTAR FASE
+        let fase = "";
+        let batallas = 0;
+
+        if (total >= 8 && total <= 15) {
+          fase = "Cuartos";
+          batallas = 4;
+        } else if (total >= 16 && total <= 31) {
+          fase = "Octavos";
+          batallas = 8;
+        } else if (total >= 32) {
+          fase = "Clasificatorias";
+          batallas = 8;
+        } else {
+          fase = "Insuficientes";
+        }
+
+        // 🔥 DISTRIBUCIÓN PREVIA
+        let distribucion = "";
+
+        if (fase === "Octavos") {
+          let base = Math.floor(total / 8);
+          let extra = total % 8;
+
+          let arr = [];
+
+          for (let i = 0; i < 8; i++) {
+            arr.push(i < extra ? base + 1 : base);
+          }
+
+          distribucion = arr.join(" - ");
+        }
+
+        // 🔥 INFO PANEL
+        if (info) {
+          info.innerHTML = `
       <div><b>Total:</b> ${total}</div>
       <div><b>Cabezas:</b> ${cabezas}</div>
       <div><b>Competidores:</b> ${normales}</div>
@@ -2151,12 +2158,12 @@
       <div><b>Batallas:</b> ${batallas}</div>
       ${distribucion ? `<div><b>Distribución:</b> ${distribucion}</div>` : ""}
     `;
-      }
+        }
 
-      // 🔥 LISTA
-      listaParticipantes.forEach((p, i) => {
+        // 🔥 LISTA
+        listaParticipantes.forEach((p, i) => {
 
-        html += `
+          html += `
       <div style="
         display:flex;
         justify-content:space-between;
@@ -2190,88 +2197,88 @@
 
       </div>
     `;
-      });
-
-      contenedor.innerHTML = html;
-    }
-
-    function eliminarParticipante(index) {
-
-      listaParticipantes.splice(index, 1);
-
-      renderLista();
-      guardarEstadoPlanilla();
-    }
-
-    function generarLlaves(participantes) {
-
-      const total = participantes.length;
-
-      // 🔥 detectar si hay clasificatorias
-      const hayClasificatoria = total >= 32;
-
-      // 🔥 cantidad de batallas
-      let cantidadBatallas = 8;
-
-      if (total >= 8 && total <= 15) cantidadBatallas = 4;
-      else if (total >= 16 && total <= 31) cantidadBatallas = 8;
-      else if (total >= 32) cantidadBatallas = 8; // base (después se ajusta según lógica)
-
-      // 🔥 separar cabezas y normales
-      let cabezas = participantes.filter(p => p.tipo === "cabeza");
-      let normales = participantes.filter(p => p.tipo !== "cabeza");
-
-      // 🔥 crear batallas vacías
-      let batallas = Array.from({ length: cantidadBatallas }, () => []);
-
-      // 🔥 PASO 1 — distribuir cabezas
-      let i = 0;
-      cabezas.forEach(c => {
-        batallas[i % cantidadBatallas].push(c);
-        i++;
-      });
-
-      // 🔥 PASO 2 — mezclar normales
-      normales = normales.sort(() => Math.random() - 0.5);
-
-      normales.forEach(n => {
-        // meter en la batalla con menos gente
-        let menor = batallas.reduce((min, b) =>
-          b.length < min.length ? b : min
-          , batallas[0]);
-
-        menor.push(n);
-      });
-
-      // 🔥 PASO 3 — ajustar distribución SOLO si es OCTAVOS SIN clasificatoria
-      if (!hayClasificatoria && cantidadBatallas === 8) {
-
-        let base = Math.floor(total / 8);
-        let sobrantes = total % 8;
-
-        let nuevaDistribucion = [];
-
-        for (let i = 0; i < 8; i++) {
-          if (i < sobrantes) {
-            nuevaDistribucion.push(base + 1);
-          } else {
-            nuevaDistribucion.push(base);
-          }
-        }
-
-        // 🔥 rearmar batallas con esa distribución
-        let todos = [...cabezas, ...normales];
-
-        let index = 0;
-        batallas = nuevaDistribucion.map(size => {
-          let grupo = todos.slice(index, index + size);
-          index += size;
-          return grupo;
         });
+
+        contenedor.innerHTML = html;
       }
 
-      return batallas;
-    }
+      function eliminarParticipante(index) {
+
+        listaParticipantes.splice(index, 1);
+
+        renderLista();
+        guardarEstadoPlanilla();
+      }
+
+      function generarLlaves(participantes) {
+
+        const total = participantes.length;
+
+        // 🔥 detectar si hay clasificatorias
+        const hayClasificatoria = total >= 32;
+
+        // 🔥 cantidad de batallas
+        let cantidadBatallas = 8;
+
+        if (total >= 8 && total <= 15) cantidadBatallas = 4;
+        else if (total >= 16 && total <= 31) cantidadBatallas = 8;
+        else if (total >= 32) cantidadBatallas = 8; // base (después se ajusta según lógica)
+
+        // 🔥 separar cabezas y normales
+        let cabezas = participantes.filter(p => p.tipo === "cabeza");
+        let normales = participantes.filter(p => p.tipo !== "cabeza");
+
+        // 🔥 crear batallas vacías
+        let batallas = Array.from({ length: cantidadBatallas }, () => []);
+
+        // 🔥 PASO 1 — distribuir cabezas
+        let i = 0;
+        cabezas.forEach(c => {
+          batallas[i % cantidadBatallas].push(c);
+          i++;
+        });
+
+        // 🔥 PASO 2 — mezclar normales
+        normales = normales.sort(() => Math.random() - 0.5);
+
+        normales.forEach(n => {
+          // meter en la batalla con menos gente
+          let menor = batallas.reduce((min, b) =>
+            b.length < min.length ? b : min
+            , batallas[0]);
+
+          menor.push(n);
+        });
+
+        // 🔥 PASO 3 — ajustar distribución SOLO si es OCTAVOS SIN clasificatoria
+        if (!hayClasificatoria && cantidadBatallas === 8) {
+
+          let base = Math.floor(total / 8);
+          let sobrantes = total % 8;
+
+          let nuevaDistribucion = [];
+
+          for (let i = 0; i < 8; i++) {
+            if (i < sobrantes) {
+              nuevaDistribucion.push(base + 1);
+            } else {
+              nuevaDistribucion.push(base);
+            }
+          }
+
+          // 🔥 rearmar batallas con esa distribución
+          let todos = [...cabezas, ...normales];
+
+          let index = 0;
+          batallas = nuevaDistribucion.map(size => {
+            let grupo = todos.slice(index, index + size);
+            index += size;
+            return grupo;
+          });
+        }
+
+        return batallas;
+      }
 
 
   </script>
