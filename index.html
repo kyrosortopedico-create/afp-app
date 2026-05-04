@@ -1407,6 +1407,18 @@
         return;
       }
 
+      // 🔥 SI YA HAY RONDA → NO REINICIAR
+      const hayRonda =
+        Array.isArray(rondaActual) &&
+        rondaActual.length > 0 &&
+        Array.isArray(rondaActual[0]) &&
+        rondaActual[0].length > 0;
+
+      if (hayRonda) {
+        renderRonda();
+        return;
+      }
+
       // 🔹 HASTA 31 → automático
       if (total <= 31) {
 
