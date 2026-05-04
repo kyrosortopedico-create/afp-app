@@ -1260,6 +1260,7 @@
         ganadoresSeleccionados: ganadoresSeleccionados,
         ganadoresPorBatalla: ganadoresPorBatalla,
         esClasificatoria: esClasificatoria,
+        tieneCabezas: tieneCabezasGlobal,
 
         timestamp: Date.now()
       });
@@ -1279,12 +1280,12 @@
       ganadoresSeleccionados = data.ganadoresSeleccionados || {};
       ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
       esClasificatoria = data.esClasificatoria || false;
+      tieneCabezasGlobal = data.tieneCabezas || false;
 
       // 🔥 DECISIÓN INTELIGENTE
       if (rondaActual && rondaActual.length > 0) {
-        renderRonda(); // estaba en competencia
-      } else {
-        // volver a carga de participantes
+        renderRonda();
+      } else if (listaParticipantes && listaParticipantes.length > 0) {
         planillaConCabezas(tieneCabezasGlobal);
         renderLista();
       }
@@ -1953,7 +1954,10 @@
     function planillaConCabezas(tieneCabezas) {
 
       tieneCabezasGlobal = tieneCabezas;
-      listaParticipantes = [];
+
+      if (!listaParticipantes || listaParticipantes.length === 0) {
+        listaParticipantes = [];
+      }
 
       let html = `<h2>Planilla</h2>`;
 
