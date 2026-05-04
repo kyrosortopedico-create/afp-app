@@ -1408,7 +1408,7 @@
 
         guardarEstadoPlanilla();
 
-        mostrarLlaves(batallas);
+        iniciarRonda(batallas);
         return;
       }
 
@@ -1499,7 +1499,16 @@
     function decisionOctavos(total) {
 
       const batallas = generarLlaves(listaParticipantes);
-      mostrarLlaves(batallas);
+
+      // 🔥 GUARDAR COMO RONDA REAL
+      rondaActual = batallas;
+      ganadoresSeleccionados = {};
+      esClasificatoria = false;
+      ganadoresPorBatalla = 1;
+
+      guardarEstadoPlanilla(); // 🔥 CLAVE
+
+      renderRonda(); // 🔥 NO mostrarLlaves
     }
 
     function generarOpciones(opciones, total) {
