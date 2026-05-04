@@ -1375,8 +1375,6 @@
         rondaActual = batallas;
         ganadoresSeleccionados = {};
 
-        guardarEstadoPlanilla();
-
         iniciarRonda(batallas);
         return;
       }
@@ -1475,8 +1473,6 @@
       esClasificatoria = false;
       ganadoresPorBatalla = 1;
 
-      guardarEstadoPlanilla(); // 🔥 CLAVE
-
       renderRonda(); // 🔥 NO mostrarLlaves
     }
 
@@ -1550,8 +1546,6 @@
 
       rondaActual = grupos;
       ganadoresSeleccionados = {};
-
-      guardarEstadoPlanilla(); // 🔥 CLAVE
 
       renderRonda();
     }
@@ -1642,7 +1636,6 @@
       }
 
       renderRonda();
-      guardarEstadoPlanilla();
     }
 
     function siguienteRonda() {
@@ -1676,7 +1669,6 @@
         const batallas = distribuirParticipantes(nuevos, 8); // octavos
 
         iniciarRonda(batallas);
-        guardarEstadoPlanilla();
         return;
       }
 
@@ -1692,7 +1684,6 @@
       const nuevasBatallas = distribuirParticipantes(nuevos, cantidadBatallas);
 
       iniciarRonda(nuevasBatallas);
-      guardarEstadoPlanilla();
     }
 
     function mostrarGanadorFinal(ganador) {
@@ -1898,139 +1889,14 @@
     async function abrirPlanilla(evento) {
 
       eventoPlanillaActual = evento;
-
+      listaParticipantes = [];
+      rondaActual = [];
+      ganadoresSeleccionados = {};
+      ganadoresPorBatalla = 1;
+      esClasificatoria = false;
+      tieneCabezasGlobal = false;
+      
       const snap = await getDoc(doc(db, "planillas", evento.id));
-
-      // 🔥 SI EXISTE PLANILLA → preguntar
-      if (snap.exists()) {
-
-        // 🔥 MODAL CONTROLADO (SIN setTimeout roto)
-        const overlay = document.createElement("div");
-
-        overlay.style = `
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:flex;
-align-items:flex-end;
-justify-content:center;
-z-index:9999;
-`;
-
-        const modal = document.createElement("div");
-
-        modal.style = `
-width:90%;
-max-width:400px;
-background:#111;
-border-radius:20px 20px 0 0;
-padding:20px;
-box-shadow:0 -10px 30px rgba(0,0,0,0.6);
-transform:translateY(100%);
-transition:transform 0.3s ease;
-`;
-
-        modal.innerHTML = `
-<div style="font-size:16px; margin-bottom:20px;">
-¿Querés volver donde lo dejaste?
-</div>
-
-<div style="display:flex; gap:10px;">
-<button id="noBtn" style="
-flex:1;
-padding:12px;
-border:none;
-border-radius:10px;
-background:#222;
-color:#fff;
-">
-No
-</button>
-
-<button id="siBtn" style="
-flex:1;
-padding:12px;
-border:none;
-border-radius:10px;
-background:#1eff8a;
-color:#000;
-font-weight:bold;
-">
-Sí
-</button>
-</div>
-`;
-
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-
-        setTimeout(() => {
-          modal.style.transform = "translateY(0)";
-        }, 10);
-
-        modal.querySelector("#siBtn").onclick = async () => {
-
-          overlay.remove();
-
-          const snap = await getDoc(doc(db, "planillas", evento.id));
-
-          if (!snap.exists()) {
-            planillaConCabezas(false);
-            return;
-          }
-
-          const data = snap.data();
-
-          // 🔥 SI HAY RONDA → PRIORIDAD TOTAL
-          const hayRondaReal =
-            Array.isArray(data.rondaActual) &&
-            data.rondaActual.length > 0 &&
-            Array.isArray(data.rondaActual[0]) &&
-            data.rondaActual[0].length > 0;
-
-          if (hayRondaReal) {
-
-            rondaActual = data.rondaActual;
-            ganadoresSeleccionados = data.ganadoresSeleccionados || {};
-            ganadoresPorBatalla = data.ganadoresPorBatalla || 1;
-            esClasificatoria = data.esClasificatoria || false;
-
-            renderRonda();
-            return;
-          }
-
-          // 🔥 SI NO HAY RONDA → LISTA
-          listaParticipantes = data.participantes || [];
-          tieneCabezasGlobal = data.tieneCabezas || false;
-
-          planillaConCabezas(tieneCabezasGlobal);
-
-          setTimeout(() => {
-            renderLista();
-          }, 50);
-        };
-
-        // 🔥 NO → solo participantes
-        modal.querySelector("#noBtn").onclick = async () => {
-          overlay.remove();
-
-          const data = snap.data();
-
-          listaParticipantes = data.participantes || [];
-          tieneCabezasGlobal = data.tieneCabezas || false;
-
-          rondaActual = [];
-          ganadoresSeleccionados = {};
-
-          planillaConCabezas(tieneCabezasGlobal);
-          renderLista();
-        };
-
-        return;
-      }
 
       // 🔥 SI NO EXISTE → flujo normal
       let html = `
@@ -2207,7 +2073,6 @@ Sí
       input.value = "";
 
       renderLista();
-      guardarEstadoPlanilla();
     }
 
     function renderLista() {
@@ -2315,7 +2180,6 @@ Sí
       listaParticipantes.splice(index, 1);
 
       renderLista();
-      guardarEstadoPlanilla();
     }
 
     function generarLlaves(participantes) {
