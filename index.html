@@ -472,7 +472,7 @@
         html += "<p>No hay eventos todavía</p>";
       }
       eventos.forEach((e, i) => {
-        const colorVisible = ajustarColor(e.color, 40);
+        const colorVisible = e.color;
 
         html += `
     <div data-id="${e.id}" class="eventoCard eventoCardAnim" style="
@@ -493,6 +493,7 @@
         bottom:0;
         width:6px;
         background:${colorVisible};
+filter: brightness(1.3) saturate(1.4);
       "></div>
 
       <div style="padding:12px 14px 12px 12px;">
@@ -502,6 +503,8 @@
           font-size:18px;
           font-weight:900;
           color:${colorVisible};
+filter: brightness(1.4) saturate(1.6);
+text-shadow: 0 0 6px ${colorVisible};
           margin-bottom:8px;
           text-align:left;
           letter-spacing:0.5px;
