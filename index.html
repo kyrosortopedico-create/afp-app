@@ -1721,11 +1721,10 @@
 
     function distribuirParticipantes(participantes, batallas) {
 
-      // 🔥 separar
       let cabezas = participantes.filter(p => p.tipo === "cabeza");
       let normales = participantes.filter(p => p.tipo !== "cabeza");
 
-      // 🔥 MEZCLA REAL (Fisher-Yates)
+      // 🔥 shuffle real
       function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -1737,21 +1736,19 @@
       cabezas = shuffle(cabezas);
       normales = shuffle(normales);
 
-      // 🔥 crear grupos
       let grupos = Array.from({ length: batallas }, () => []);
 
-      // 🔥 meter cabezas (1 por batalla máximo)
-      cabezas.forEach((c, i) => {
-        grupos[i % batallas].push(c);
+      // 🔥 1. distribuir cabezas (1 por batalla)
+      let index = 0;
+      cabezas.forEach(c => {
+        grupos[index].push(c);
+        index = (index + 1) % batallas;
       });
 
-      // 🔥 mezclar normales en el grupo con menos gente
+      // 🔥 2. distribuir normales en ronda
       normales.forEach(n => {
-        let menor = grupos.reduce((min, g) =>
-          g.length < min.length ? g : min
-          , grupos[0]);
-
-        menor.push(n);
+        grupos[index].push(n);
+        index = (index + 1) % batallas;
       });
 
       return grupos;
