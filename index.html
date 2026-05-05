@@ -472,6 +472,7 @@
         html += "<p>No hay eventos todavía</p>";
       }
       eventos.forEach((e, i) => {
+        const colorVisible = ajustarColor(e.color, 40);
 
         html += `
     <div data-id="${e.id}" class="eventoCard eventoCardAnim" style="
@@ -491,7 +492,7 @@
         top:0;
         bottom:0;
         width:6px;
-        background:${e.color};
+        background:${colorVisible};
       "></div>
 
       <div style="padding:12px 14px 12px 12px;">
@@ -500,7 +501,7 @@
         <div style="
           font-size:18px;
           font-weight:900;
-          color:${e.color};
+          color:${colorVisible};
           margin-bottom:8px;
           text-align:left;
           letter-spacing:0.5px;
@@ -2288,6 +2289,20 @@
       }
 
       return batallas;
+    }
+
+    function ajustarColor(color, porcentaje = 20) {
+      let num = parseInt(color.replace("#", ""), 16);
+
+      let r = (num >> 16) + porcentaje;
+      let g = ((num >> 8) & 0x00FF) + porcentaje;
+      let b = (num & 0x0000FF) + porcentaje;
+
+      r = Math.min(255, r);
+      g = Math.min(255, g);
+      b = Math.min(255, b);
+
+      return "#" + (r << 16 | g << 8 | b).toString(16).padStart(6, "0");
     }
 
 
