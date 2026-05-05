@@ -1537,6 +1537,9 @@
       // 🔥 detectar si es clasificatoria
       esClasificatoria = pasan > 1;
 
+      console.log("PARTICIPANTES:", listaParticipantes);
+      console.log("CABEZAS:", listaParticipantes.filter(p => p.tipo === "cabeza"));
+      console.log("NORMALES:", listaParticipantes.filter(p => p.tipo !== "cabeza"));
       const grupos = distribuirParticipantes(listaParticipantes, batallas);
 
       iniciarRonda(grupos);
@@ -1721,8 +1724,13 @@
 
     function distribuirParticipantes(participantes, batallas) {
 
-      let cabezas = participantes.filter(p => p.tipo === "cabeza");
-      let normales = participantes.filter(p => p.tipo !== "cabeza");
+      let cabezas = participantes.filter(p =>
+        p.tipo && p.tipo.toLowerCase().trim() === "cabeza"
+      );
+
+      let normales = participantes.filter(p =>
+        !p.tipo || p.tipo.toLowerCase().trim() !== "cabeza"
+      );
 
       function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
@@ -2097,7 +2105,7 @@
 
       listaParticipantes.push({
         nombre,
-        tipo
+        tipo: tipo === "cabeza" ? "cabeza" : "normal"
       });
 
       input.value = "";
