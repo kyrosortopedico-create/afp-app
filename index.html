@@ -1721,21 +1721,31 @@
 
     function distribuirParticipantes(participantes, batallas) {
 
+      // 🔥 separar
       let cabezas = participantes.filter(p => p.tipo === "cabeza");
       let normales = participantes.filter(p => p.tipo !== "cabeza");
 
+      // 🔥 MEZCLA REAL (Fisher-Yates)
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      cabezas = shuffle(cabezas);
+      normales = shuffle(normales);
+
+      // 🔥 crear grupos
       let grupos = Array.from({ length: batallas }, () => []);
 
-      // 🔥 cabezas primero
-      let i = 0;
-      cabezas.forEach(c => {
+      // 🔥 meter cabezas (1 por batalla máximo)
+      cabezas.forEach((c, i) => {
         grupos[i % batallas].push(c);
-        i++;
       });
 
-      // 🔥 mezclar normales
-      normales = normales.sort(() => Math.random() - 0.5);
-
+      // 🔥 mezclar normales en el grupo con menos gente
       normales.forEach(n => {
         let menor = grupos.reduce((min, g) =>
           g.length < min.length ? g : min
@@ -1895,7 +1905,7 @@
       ganadoresPorBatalla = 1;
       esClasificatoria = false;
       tieneCabezasGlobal = false;
-      
+
       const snap = await getDoc(doc(db, "planillas", evento.id));
 
       // 🔥 SI NO EXISTE → flujo normal
