@@ -1724,7 +1724,6 @@
       let cabezas = participantes.filter(p => p.tipo === "cabeza");
       let normales = participantes.filter(p => p.tipo !== "cabeza");
 
-      // 🔥 shuffle real
       function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -1738,17 +1737,41 @@
 
       let grupos = Array.from({ length: batallas }, () => []);
 
-      // 🔥 1. distribuir cabezas (1 por batalla)
-      let index = 0;
+      // 🔥 1. repartir cabezas SIN acumulación
       cabezas.forEach(c => {
-        grupos[index].push(c);
-        index = (index + 1) % batallas;
+        let gruposDisponibles = grupos
+          .map((g, i) => ({ g, i }))
+          .filter(x => x.g.length === 0); // solo grupos vacíos primero
+
+        let elegido;
+
+        if (gruposDisponibles.length > 0) {
+          elegido = gruposDisponibles[Math.floor(Math.random() * gruposDisponibles.length)].i;
+        } else {
+          // si ya todos tienen cabeza, elegir el grupo con menos gente
+          let min = Math.min(...grupos.map(g => g.length));
+          let candidatos = grupos
+            .map((g, i) => ({ g, i }))
+            .filter(x => x.g.length === min);
+
+          elegido = candidatos[Math.floor(Math.random() * candidatos.length)].i;
+        }
+
+        grupos[elegido].push(c);
       });
 
-      // 🔥 2. distribuir normales en ronda
+      // 🔥 2. repartir normales equilibrado + random
       normales.forEach(n => {
-        grupos[index].push(n);
-        index = (index + 1) % batallas;
+
+        let min = Math.min(...grupos.map(g => g.length));
+
+        let candidatos = grupos
+          .map((g, i) => ({ g, i }))
+          .filter(x => x.g.length === min);
+
+        let elegido = candidatos[Math.floor(Math.random() * candidatos.length)].i;
+
+        grupos[elegido].push(n);
       });
 
       return grupos;
