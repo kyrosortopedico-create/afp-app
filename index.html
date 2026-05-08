@@ -116,37 +116,20 @@
     let listaParticipantes = [];
     let tieneCabezasGlobal = false;
 
-    let eventoPlanillaActual = null;
-    let rondaActual = [];
-    let ganadoresSeleccionados = {};
-    let ganadoresPorBatalla = 1;
-    let esClasificatoria = false;
-
-    window.pantallaPlanillas = pantallaPlanillas;
-    window.seleccionarEventoPlanilla = seleccionarEventoPlanilla;
-    window.planillaConCabezas = planillaConCabezas;
-    window.agregarParticipante = agregarParticipante;
-    window.eliminarParticipante = eliminarParticipante;
     window.mostrarLogin = mostrarLogin;
     window.mostrarRegistro = mostrarRegistro;
     window.registrar = registrar;
     window.login = login;
     window.cambiarPantalla = cambiarPantalla;
+
     window.pantallaCrearEvento = function () {
       pantallaCrearEvento();
     };
+
     window.crearEvento = crearEvento;
     window.verEvento = verEvento;
     window.volverInicio = volverInicio;
     window.eliminarEvento = eliminarEvento;
-    window.cerrarInscripcion = cerrarInscripcion;
-    window.renderLista = renderLista;
-    window.mostrarDecisionFormato = mostrarDecisionFormato;
-    window.decisionClasificatoria_32_47 = decisionClasificatoria_32_47;
-    window.decisionOctavos = decisionOctavos;
-    window.confirmarFormato = confirmarFormato;
-    window.toggleGanador = toggleGanador;
-    window.siguienteRonda = siguienteRonda;
 
     onAuthStateChanged(auth, async (user) => {
 
