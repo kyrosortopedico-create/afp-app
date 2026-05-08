@@ -1286,6 +1286,9 @@
     let eventoPlanillaActual = null;
     let tipoParticipanteActual = "normal";
     let rondaActual = [];
+
+    let ganadoresSeleccionados = {};
+    let faseActual = "";
     let historialPosiciones = {
       octavos: [],
       cuartos: [],
@@ -1293,8 +1296,6 @@
       subcampeon: [],
       campeon: []
     };
-    let ganadoresSeleccionados = {};
-    let faseActual = "";
 
     function abrirPlanilla(id) {
 
@@ -1306,6 +1307,13 @@
       }
 
       eventoPlanillaActual = evento;
+      historialPosiciones = {
+        octavos: [],
+        cuartos: [],
+        semifinal: [],
+        subcampeon: [],
+        campeon: []
+      };
 
       const cantidad = parseInt(evento.modalidad);
 
@@ -1767,9 +1775,27 @@
 
     function renderRonda() {
 
+      const cantidadBatallas = rondaActual.length;
+
+      if (cantidadBatallas === 8) {
+        faseActual = "octavos";
+      }
+
+      else if (cantidadBatallas === 4) {
+        faseActual = "cuartos";
+      }
+
+      else if (cantidadBatallas === 2) {
+        faseActual = "semifinal";
+      }
+
+      else if (cantidadBatallas === 1) {
+        faseActual = "final";
+      }
+
       let html = `
-    <h2>Ronda</h2>
-  `;
+  <h2>${faseActual.toUpperCase()}</h2>
+`;
 
       rondaActual.forEach((batalla, batallaIndex) => {
 
@@ -1899,6 +1925,7 @@
     function siguienteRonda() {
 
       let ganadores = [];
+      let eliminados = [];
 
       rondaActual.forEach((batalla, batallaIndex) => {
 
@@ -1908,17 +1935,84 @@
         ganadores.push(
           batalla[index]
         );
+        batalla.forEach((participante, i) => {
+
+          if (i !== index) {
+            eliminados.push(participante);
+          }
+
+        });
       });
 
+      if (faseActual === "octavos") {
+        historialPosiciones.octavos.push(...eliminados);
+      }
+
+      if (faseActual === "cuartos") {
+        historialPosiciones.cuartos.push(...eliminados);
+      }
+
+      if (faseActual === "semifinal") {
+        historialPosiciones.semifinal.push(...eliminados);
+      }
+
+      if (faseActual === "final") {
+
+        historialPosiciones.subcampeon.push(
+          eliminados[0]
+        );
+
+        historialPosiciones.campeon.push(
+          ganadores[0]
+        );
+      }
       // CAMPEÓN
       if (ganadores.length === 1) {
 
-        guardarRanking(
-          ganadores[0],
-          "campeon",
-          0,
-          0
-        );
+        historialPosiciones.campeon.forEach(p => {
+          guardarRanking(
+            p,
+            "campeon",
+            0,
+            0
+          );
+        });
+
+        historialPosiciones.subcampeon.forEach(p => {
+          guardarRanking(
+            p,
+            "subcampeon",
+            1,
+            1
+          );
+        });
+
+        historialPosiciones.semifinal.forEach(p => {
+          guardarRanking(
+            p,
+            "semifinal",
+            2,
+            1
+          );
+        });
+
+        historialPosiciones.cuartos.forEach(p => {
+          guardarRanking(
+            p,
+            "cuartos",
+            1,
+            1
+          );
+        });
+
+        historialPosiciones.octavos.forEach(p => {
+          guardarRanking(
+            p,
+            "octavos",
+            0,
+            1
+          );
+        });
 
         mostrarCampeon(ganadores[0]);
         return;
@@ -1929,10 +2023,14 @@
 
       for (let i = 0; i < ganadores.length; i += 2) {
 
-        nuevasBatallas.push([
-          ganadores[i],
-          ganadores[i + 1]
-        ]);
+        if (ganadores[i + 1]) {
+
+          nuevasBatallas.push([
+            ganadores[i],
+            ganadores[i + 1]
+          ]);
+
+        }
       }
 
       rondaActual = nuevasBatallas;
