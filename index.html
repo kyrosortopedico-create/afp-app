@@ -89,7 +89,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, updateDoc, where, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
     const firebaseConfig = {
@@ -1484,7 +1484,15 @@
 
     </div>
 
-    <div id="listaParticipantes"></div>
+    <div
+  id="listaParticipantes"
+  style="
+    max-height:260px;
+    overflow-y:auto;
+    margin-top:10px;
+    padding-right:4px;
+  "
+></div>
 
 <div id="infoPlanilla"></div>
 
@@ -2606,7 +2614,7 @@
           font-weight:800;
           margin-bottom:6px;
         ">
-          ${(p.integrantes || []).join(" • ")}
+          ${p.nombre || "Sin nombre"}
         </div>
 
         <div style="
