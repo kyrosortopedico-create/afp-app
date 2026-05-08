@@ -2480,6 +2480,35 @@
 
       });
 
+      let rankingAgrupado = {};
+
+      ranking.forEach(p => {
+
+        if (!rankingAgrupado[p.nombre]) {
+
+          rankingAgrupado[p.nombre] = {
+            ...p
+          };
+
+        } else {
+
+          rankingAgrupado[p.nombre].puntos +=
+            p.puntos || 0;
+
+          rankingAgrupado[p.nombre].victorias +=
+            p.victorias || 0;
+
+          rankingAgrupado[p.nombre].derrotas +=
+            p.derrotas || 0;
+
+          rankingAgrupado[p.nombre].competencias +=
+            p.competencias || 0;
+        }
+
+      });
+
+      ranking = Object.values(rankingAgrupado);
+
       ranking.sort((a, b) => b.puntos - a.puntos);
 
       let html = `
