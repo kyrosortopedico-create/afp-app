@@ -145,7 +145,6 @@
       try {
 
         if (user) {
-          activarNotificaciones();
 
           const docRef = doc(db, "usuarios", user.uid);
           const docSnap = await getDoc(docRef);
