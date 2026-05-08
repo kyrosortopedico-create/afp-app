@@ -29,7 +29,7 @@
     }
 
     body {
-      text-rendering: optimizeLegibility;
+      text-rendering: auto;
     }
 
     * {
@@ -37,17 +37,16 @@
     }
 
     .eventoCardAnim {
-      opacity: 0;
-      transform: translateY(20px);
-      animation: aparecerCard 0.4s ease forwards;
-      transform: translateZ(0);
-      backface-visibility: hidden;
+      animation: aparecerCard 0.25s ease forwards;
     }
 
     @keyframes aparecerCard {
+      from {
+        opacity: 0;
+      }
+
       to {
         opacity: 1;
-        transform: translateY(0);
       }
     }
   </style>
@@ -482,10 +481,8 @@
 
         html += `
     <div data-id="${e.id}" class="eventoCard eventoCardAnim" style="
-      animation-delay:${i * 0.05}s;
-      position:relative;
-      overflow:hidden;
-      border-radius:16px;
+  position:relative;
+  border-radius:16px;
       margin-bottom:14px;
       cursor:pointer;
       background:#0d0d10;
