@@ -35,20 +35,6 @@
     * {
       -webkit-tap-highlight-color: transparent;
     }
-
-    .eventoCardAnim {
-      animation: aparecerCard 0.25s ease forwards;
-    }
-
-    @keyframes aparecerCard {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
   </style>
 
   <div id="loaderScreen" style="
@@ -477,10 +463,9 @@
         html += "<p>No hay eventos todavía</p>";
       }
       eventos.forEach((e, i) => {
-        const colorVisible = e.color;
 
         html += `
-    <div data-id="${e.id}" class="eventoCard eventoCardAnim" style="
+    <div data-id="${e.id}" class="eventoCard" style="
   position:relative;
   border-radius:16px;
       margin-bottom:14px;
@@ -2294,22 +2279,6 @@ box-shadow:none;
 
       return batallas;
     }
-
-    function ajustarColor(color, porcentaje = 20) {
-      let num = parseInt(color.replace("#", ""), 16);
-
-      let r = (num >> 16) + porcentaje;
-      let g = ((num >> 8) & 0x00FF) + porcentaje;
-      let b = (num & 0x0000FF) + porcentaje;
-
-      r = Math.min(255, r);
-      g = Math.min(255, g);
-      b = Math.min(255, b);
-
-      return "#" + (r << 16 | g << 8 | b).toString(16).padStart(6, "0");
-    }
-
-
 
   </script>
 
