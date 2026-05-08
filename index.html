@@ -89,7 +89,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, getDoc, addDoc, updateDoc, where, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
     const firebaseConfig = {
@@ -139,6 +139,7 @@
     window.seleccionarGanador = seleccionarGanador;
     window.siguienteRonda = siguienteRonda;
     window.obtenerNivelCompetencia = obtenerNivelCompetencia;
+    window.abrirRanking = abrirRanking;
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -299,7 +300,39 @@
       }
 
       if (p === "eventos") {
-        contenido.innerHTML = "Eventos";
+
+        let html = `
+    <h2>Eventos</h2>
+
+    <div onclick="abrirRanking()" style="
+      background:#111;
+      border:1px solid #222;
+      border-radius:14px;
+      padding:16px;
+      margin-top:15px;
+      text-align:left;
+      cursor:pointer;
+    ">
+
+      <div style="
+        font-size:18px;
+        font-weight:900;
+        margin-bottom:6px;
+      ">
+        Ranking
+      </div>
+
+      <div style="
+        color:#888;
+        font-size:13px;
+      ">
+        Ver ranking semanal, mensual y anual
+      </div>
+
+    </div>
+  `;
+
+        cambiarContenidoConAnimacion(html, "adelante");
         return;
       }
 
@@ -2182,33 +2215,90 @@
 
       for (const nombre of participante.integrantes) {
 
-        await addDoc(collection(db, "ranking"), {
+        const q = query(
+          collection(db, "ranking"),
+          where("nombre", "==", nombre)
+        );
 
-          nombre,
+        const snap = await getDocs(q);
 
-          competencia:
-            eventoPlanillaActual.competencia,
+        // NO EXISTE
+        if (snap.empty) {
 
-          color:
-            eventoPlanillaActual.color,
+          await addDoc(collection(db, "ranking"), {
 
-          nivel,
+            nombre,
 
-          posicion,
+            puntos,
+            puntosPorCompetencia: {
+              [eventoPlanillaActual.competencia]: puntos
+            },
 
-          puntos,
+            victorias,
 
-          modalidad:
-            eventoPlanillaActual.modalidad,
+            derrotas,
 
-          fecha,
+            competencias: 1,
 
-          victorias,
+            color:
+              eventoPlanillaActual.color,
 
-          derrotas,
+            competencia:
+              eventoPlanillaActual.competencia,
 
-          timestamp: Date.now()
-        });
+            nivel,
+
+            posicion,
+
+            modalidad:
+              eventoPlanillaActual.modalidad,
+
+            fecha,
+
+            timestamp: Date.now()
+          });
+
+        }
+
+        // YA EXISTE
+        else {
+
+          const docActual = snap.docs[0];
+
+          const data = docActual.data();
+
+          await updateDoc(docActual.ref, {
+
+            puntos:
+              (data.puntos || 0) + puntos,
+
+            victorias:
+              (data.victorias || 0) + victorias,
+
+            derrotas:
+              (data.derrotas || 0) + derrotas,
+
+            competencias:
+              (data.competencias || 0) + 1,
+
+            color:
+              eventoPlanillaActual.color,
+
+            competencia:
+              eventoPlanillaActual.competencia,
+
+            nivel,
+
+            posicion,
+
+            modalidad:
+              eventoPlanillaActual.modalidad,
+
+            fecha,
+
+            timestamp: Date.now()
+          });
+        }
       }
     }
 
@@ -2253,6 +2343,277 @@
       setTimeout(() => {
         notif.remove();
       }, 2500);
+    }
+
+    async function abrirRanking(tipo = "anual") {
+
+      const snapshot = await getDocs(
+        collection(db, "ranking")
+      );
+
+      let ranking = [];
+
+      const ahora = new Date();
+
+      const inicioSemana = new Date(ahora);
+      inicioSemana.setDate(
+        ahora.getDate() - ahora.getDay()
+      );
+
+      const inicioMes = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        1
+      );
+
+      const inicioAnio = new Date(
+        ahora.getFullYear(),
+        0,
+        1
+      );
+
+      snapshot.forEach(doc => {
+
+        const data = doc.data();
+
+        const fechaJugador =
+          new Date(data.timestamp);
+
+        if (tipo === "semanal") {
+
+          if (fechaJugador >= inicioSemana) {
+            ranking.push(data);
+          }
+
+        }
+
+        else if (tipo === "mensual") {
+
+          if (fechaJugador >= inicioMes) {
+            ranking.push(data);
+          }
+
+        }
+
+        else {
+
+          if (fechaJugador >= inicioAnio) {
+            ranking.push(data);
+          }
+
+        }
+
+      });
+
+      ranking.sort((a, b) => b.puntos - a.puntos);
+
+      let html = `
+    <h2>Ranking Anual</h2>
+
+    <div style="
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+">
+
+  <button
+    onclick="abrirRanking('anual')"
+    style="
+      flex:1;
+      padding:10px;
+      border:none;
+      border-radius:10px;
+      background:${tipo === "anual" ? "#fff" : "#222"};
+      color:${tipo === "anual" ? "#000" : "#fff"};
+      font-weight:800;
+    "
+  >
+    Anual
+  </button>
+
+  <button
+    onclick="abrirRanking('mensual')"
+    style="
+      flex:1;
+      padding:10px;
+      border:none;
+      border-radius:10px;
+      background:${tipo === "mensual" ? "#fff" : "#222"};
+      color:${tipo === "mensual" ? "#000" : "#fff"};
+      font-weight:800;
+    "
+  >
+    Mensual
+  </button>
+
+  <button
+    onclick="abrirRanking('semanal')"
+    style="
+      flex:1;
+      padding:10px;
+      border:none;
+      border-radius:10px;
+      background:${tipo === "semanal" ? "#fff" : "#222"};
+      color:${tipo === "semanal" ? "#000" : "#fff"};
+      font-weight:800;
+    "
+  >
+    Semanal
+  </button>
+
+</div>
+  `;
+
+      if (ranking.length === 0) {
+
+        html += `
+      <div style="
+        color:#777;
+        margin-top:20px;
+      ">
+        No hay ranking todavía
+      </div>
+    `;
+      }
+
+      const inicioPeriodo =
+        tipo === "anual"
+          ? inicioAnio
+          : tipo === "mensual"
+            ? inicioMes
+            : inicioSemana;
+
+      const diasTotales = Math.max(
+        1,
+        Math.floor(
+          (ahora - inicioPeriodo)
+          / (1000 * 60 * 60 * 24)
+        )
+      );
+
+      const semanasTotales =
+        diasTotales / 7;
+
+      const mesesTotales =
+        diasTotales / 30;
+
+      ranking.forEach((p, index) => {
+
+        html += `
+      <div style="
+        background:#111;
+        border:1px solid #222;
+        border-left:6px solid ${p.color || "#fff"};
+        border-radius:14px;
+        padding:14px;
+        margin-bottom:10px;
+        text-align:left;
+      ">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin-bottom:8px;
+        ">
+
+          <div style="
+            font-size:18px;
+            font-weight:900;
+          ">
+            #${index + 1}
+          </div>
+
+          <div style="
+            font-size:22px;
+            font-weight:900;
+            color:${p.color || "#fff"};
+          ">
+            ${p.puntos || 0}
+          </div>
+
+        </div>
+
+        <div style="
+          font-size:16px;
+          font-weight:800;
+          margin-bottom:6px;
+        ">
+          ${(p.integrantes || []).join(" • ")}
+        </div>
+
+        <div style="
+  color:#888;
+  font-size:13px;
+  line-height:1.6;
+">
+
+  Victorias: ${p.victorias || 0}
+  <br>
+
+  Derrotas: ${p.derrotas || 0}
+  <br>
+
+  Competencias: ${p.competencias || 0}
+  <br><br>
+
+  ${tipo === "anual"
+            ? `
+      Promedio día:
+      ${(p.puntos / diasTotales).toFixed(1)}
+      <br>
+
+      Promedio semana:
+      ${(p.puntos / semanasTotales).toFixed(1)}
+      <br>
+
+      Promedio mes:
+      ${(p.puntos / mesesTotales).toFixed(1)}
+    `
+            : ""
+          }
+
+  ${tipo === "mensual"
+            ? `
+      Promedio día:
+      ${(p.puntos / diasTotales).toFixed(1)}
+      <br>
+
+      Promedio semana:
+      ${(p.puntos / semanasTotales).toFixed(1)}
+    `
+            : ""
+          }
+
+  ${tipo === "semanal"
+            ? `
+      Promedio día:
+      ${(p.puntos / diasTotales).toFixed(1)}
+    `
+            : ""
+          }
+
+</div>
+
+      </div>
+    `;
+      });
+
+      html += `
+    <button onclick="cambiarPantalla('eventos')" style="
+      width:100%;
+      padding:12px;
+      background:#222;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      margin-top:15px;
+    ">
+      Volver
+    </button>
+  `;
+
+      cambiarContenidoConAnimacion(html, "adelante");
     }
 
   </script>
