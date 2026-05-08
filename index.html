@@ -462,111 +462,76 @@
       if (eventos.length === 0) {
         html += "<p>No hay eventos todavía</p>";
       }
+
       eventos.forEach((e, i) => {
 
         html += `
     <div data-id="${e.id}" class="eventoCard" style="
-  position:relative;
-  border-radius:16px;
-      margin-bottom:14px;
+      background:#151515;
+      border:1px solid #242424;
+      border-left:6px solid ${e.color};
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:12px;
       cursor:pointer;
-      background:#0d0d10;
-      border:1px solid #1b1b1f;
-box-shadow:none;
+      text-align:left;
     ">
 
       <div style="
-        position:absolute;
-        left:0;
-        top:0;
-        bottom:0;
-        width:6px;
-        background:${colorVisible};
-      "></div>
+        color:${e.color};
+        font-size:18px;
+        font-weight:900;
+        margin-bottom:10px;
+      ">
+        ${e.competencia}
+      </div>
 
-      <div style="padding:12px 14px 12px 12px;">
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:10px;
+      ">
 
-        <!-- COMPETENCIA (AHORA PROTAGONISTA) -->
-        <div style="
-          font-size:18px;
-          font-weight:900;
-          color:${colorVisible};
-          margin-bottom:8px;
-          text-align:left;
-          letter-spacing:0.5px;
-        ">
-          ${e.competencia}
-        </div>
+        <div>
 
-        <!-- BLOQUE PRINCIPAL -->
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          align-items:flex-start;
-        ">
-
-          <!-- IZQUIERDA -->
-          <div style="text-align:left;">
-
-            <div style="
-              font-size:17px;
-              font-weight:700;
-              margin-bottom:4px;
-              color:#fff;
-            ">
-              ${e.ubicacion}
-            </div>
-
-            <div style="
-              font-size:14px;
-              color:#bbb;
-              font-weight:500;
-            ">
-              ${formatearHora(e.horario)} HS • $${e.inscripcion}
-            </div>
-
+          <div style="
+            color:#fff;
+            font-size:16px;
+            font-weight:700;
+            margin-bottom:4px;
+          ">
+            ${e.ubicacion}
           </div>
 
-          <!-- DERECHA (MAS PROTAGONISMO) -->
           <div style="
-  position:relative;
-  text-align:right;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  justify-content:flex-start;
-">
+            color:#9a9a9a;
+            font-size:13px;
+            font-weight:500;
+          ">
+            ${formatearHora(e.horario)} HS • $${e.inscripcion}
+          </div>
 
-  ${obtenerEstadoEvento(e.fecha)
-            ? `<div style="
-          position:absolute;
-          top:-24px;
-          right:0;
-          background:${obtenerEstadoEvento(e.fecha) === "HOY" ? "#1eff8a" : "#ffd400"};
-          color:#000;
-          font-size:10px;
-          font-weight:900;
-          padding:2px 6px;
-          border-radius:6px;
-        ">
-          ${obtenerEstadoEvento(e.fecha)}
-        </div>`
-            : ""
-          }
+        </div>
 
-  <div style="
-    font-size:18px;
-    font-weight:800;
-    color:#fff;
-    line-height:1.1;
-  ">
-    ${e.modalidad.toUpperCase()}<br>
-    <span style="font-size:14px; color:#aaa;">
-      ${formatearFecha(e.fecha)}
-    </span>
-  </div>
+        <div style="text-align:right;">
 
-</div>
+          <div style="
+            color:#fff;
+            font-size:15px;
+            font-weight:800;
+            margin-bottom:4px;
+          ">
+            ${e.modalidad.toUpperCase()}
+          </div>
+
+          <div style="
+            color:#8a8a8a;
+            font-size:12px;
+            font-weight:600;
+          ">
+            ${formatearFecha(e.fecha)}
+          </div>
 
         </div>
 
@@ -574,6 +539,7 @@ box-shadow:none;
 
     </div>
   `;
+
       });
 
       contenido.innerHTML = html;
