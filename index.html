@@ -480,13 +480,36 @@
     ">
 
       <div style="
-        color:${e.color};
-        font-size:18px;
-        font-weight:900;
-        margin-bottom:10px;
-      ">
-        ${e.competencia}
-      </div>
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+">
+
+  <div style="
+    color:${e.color};
+    font-size:18px;
+    font-weight:900;
+  ">
+    ${e.competencia}
+  </div>
+
+  ${obtenerEstadoEvento(e.fecha) ? `
+    <div style="
+      background:${obtenerEstadoEvento(e.fecha) === "HOY" ? "#1eff8a" : "#ffd400"};
+      color:#000;
+      font-size:10px;
+      font-weight:900;
+      padding:4px 8px;
+      border-radius:999px;
+      flex-shrink:0;
+    ">
+      ${obtenerEstadoEvento(e.fecha)}
+    </div>
+  ` : ""}
+
+</div>
 
       <div style="
         display:flex;
@@ -818,9 +841,9 @@
       let color = "#ffffff";
 
       if (competencia === "Liga Litoral") color = "#FF4C00";
-      if (competencia === "Rappandemia") color = "#440069";
+      if (competencia === "Rappandemia") color = "#5F0394";
       if (competencia === "Homies") color = "#0DBFA1";
-      if (competencia === "La Casa del Free") color = "#FFF200";
+      if (competencia === "La Casa del Free") color = "#F2DE6F";
       if (competencia === "Wasted") color = "#212121";
       if (competencia === "RP") color = "#1064AD";
       if (competencia === "Sin Korte") color = "#FF0000";
