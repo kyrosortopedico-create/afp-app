@@ -115,6 +115,7 @@
     let deferredPrompt = null;
     let listaParticipantes = [];
     let tieneCabezasGlobal = false;
+    let nombresParticipantesActuales = [];
 
     window.mostrarLogin = mostrarLogin;
     window.mostrarRegistro = mostrarRegistro;
@@ -140,6 +141,9 @@
     window.siguienteRonda = siguienteRonda;
     window.obtenerNivelCompetencia = obtenerNivelCompetencia;
     window.abrirRanking = abrirRanking;
+    window.seleccionarMVP = seleccionarMVP;
+    window.filtrarMVP = filtrarMVP;
+    window.confirmarMVP = confirmarMVP;
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -1579,6 +1583,13 @@
         tipo: tipoParticipanteActual
       });
 
+      integrantes.forEach(nome => {
+
+        if (!nombresParticipantesActuales.includes(nome)) {
+          nombresParticipantesActuales.push(nome);
+        }
+
+      });
       for (let i = 1; i <= cantidad; i++) {
         document.getElementById(`integrante${i}`).value = "";
       }
@@ -1658,6 +1669,20 @@
     function eliminarParticipante(index) {
 
       listaParticipantes.splice(index, 1);
+
+      nombresParticipantesActuales = [];
+
+      listaParticipantes.forEach(p => {
+
+        p.integrantes.forEach(nome => {
+
+          if (!nombresParticipantesActuales.includes(nome)) {
+            nombresParticipantesActuales.push(nome);
+          }
+
+        });
+
+      });
 
       renderListaParticipantes();
     }
@@ -2112,6 +2137,66 @@
 
     </div>
 
+    <div style="
+      margin-top:24px;
+      text-align:left;
+    ">
+
+      <div style="
+        font-size:13px;
+        color:#777;
+        margin-bottom:8px;
+      ">
+        MVP del evento
+      </div>
+
+      <input
+        id="mvpInput"
+        oninput="filtrarMVP()"
+        placeholder="Buscar competidor..."
+        autocomplete="off"
+        style="
+          width:100%;
+          padding:14px;
+          box-sizing:border-box;
+          background:#111;
+          border:1px solid #222;
+          border-radius:12px;
+          color:#fff;
+          font-size:14px;
+        "
+      >
+
+      <div
+        id="mvpSugerencias"
+        style="
+          background:#111;
+          border:1px solid #222;
+          border-top:none;
+          border-radius:0 0 12px 12px;
+          overflow:hidden;
+          margin-top:-2px;
+          max-height:220px;
+          overflow-y:auto;
+        "
+      >
+      </div>
+
+    </div>
+
+    <button onclick="confirmarMVP()" style="
+      width:100%;
+      padding:12px;
+      background:#fff;
+      color:#000;
+      border:none;
+      border-radius:10px;
+      margin-top:20px;
+      font-weight:900;
+    ">
+      Confirmar MVP
+    </button>
+
     <button onclick="pantallaPlanillas()" style="
       width:100%;
       padding:12px;
@@ -2119,13 +2204,159 @@
       color:#fff;
       border:none;
       border-radius:10px;
-      margin-top:20px;
+      margin-top:12px;
     ">
       Volver
     </button>
   `;
 
       cambiarContenidoConAnimacion(html, "adelante");
+
+      setTimeout(() => {
+        filtrarMVP();
+      }, 100);
+
+    }
+
+    function seleccionarMVP(nome) {
+
+      const input = document.getElementById("mvpInput");
+      const sugerencias = document.getElementById("mvpSugerencias");
+
+      if (!input || !sugerencias) return;
+
+      input.value = nome;
+      sugerencias.style.display = "none";
+    }
+
+    function filtrarMVP() {
+
+      const input = document.getElementById("mvpInput");
+      const sugerencias = document.getElementById("mvpSugerencias");
+
+      if (!input || !sugerencias) return;
+
+      const valor = input.value
+        .trim()
+        .toLowerCase();
+
+      const todosLosNombres = [];
+
+      listaParticipantes.forEach(p => {
+
+        p.integrantes.forEach(nome => {
+
+          if (!todosLosNombres.includes(nome)) {
+            todosLosNombres.push(nome);
+          }
+
+        });
+
+      });
+
+      const coincidencias = todosLosNombres.filter(nome =>
+        nome.toLowerCase().includes(valor)
+      );
+
+      sugerencias.style.display = "block";
+
+      if (coincidencias.length === 0) {
+
+        sugerencias.innerHTML = `
+          <div style="
+            padding:12px;
+            color:#777;
+          ">
+            Sin resultados
+          </div>
+        `;
+
+        return;
+      }
+
+      sugerencias.innerHTML = coincidencias.map(nome => `
+        <div
+          onclick="seleccionarMVP('${nome.replace(/'/g, "\\'")}')"
+          style="
+            padding:12px;
+            border-bottom:1px solid #1f1f1f;
+            cursor:pointer;
+          "
+        >
+          ${nome}
+        </div>
+      `).join("");
+    }
+
+    async function confirmarMVP() {
+
+      const input = document.getElementById("mvpInput");
+
+      if (!input) return;
+
+      const valor = input.value.trim();
+
+      if (!valor) {
+        mostrarNotificacion("Seleccioná un MVP");
+        return;
+      }
+
+      const todosLosNombres = [];
+
+      listaParticipantes.forEach(p => {
+
+        p.integrantes.forEach(nome => {
+
+          if (!todosLosNombres.includes(nome)) {
+            todosLosNombres.push(nome);
+          }
+
+        });
+
+      });
+
+      const existe = todosLosNombres.some(nome =>
+        nome.toLowerCase() === valor.toLowerCase()
+      );
+
+      if (!existe) {
+
+        mostrarNotificacion(
+          "El MVP debe existir en la planilla"
+        );
+
+        return;
+      }
+
+      const q = query(
+        collection(db, "ranking"),
+        where("nombre", "==", valor)
+      );
+
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+
+        mostrarNotificacion(
+          "Jugador no encontrado"
+        );
+
+        return;
+      }
+
+      const docActual = snap.docs[0];
+
+      const data = docActual.data();
+
+      await updateDoc(docActual.ref, {
+
+        mvps: (data.mvps || 0) + 1
+
+      });
+
+      mostrarNotificacion("MVP registrado");
+
+      pantallaPlanillas();
     }
 
     function obtenerNivelCompetencia(nombre) {
@@ -2298,7 +2529,9 @@
 
             fecha,
 
-            timestamp: Date.now()
+            timestamp: Date.now(),
+
+            mvps: 0
           });
 
         }
@@ -2641,7 +2874,8 @@
       28px
       28px
       38px
-      42px;
+      42px
+      40px;
     gap:4px;
     padding:0 12px 6px 12px;
     margin-top:2px;
@@ -2688,6 +2922,12 @@
       padding-right:2px;
     ">
       ${promedioModo}
+    </div>
+
+    <div style="
+      text-align:center;
+    ">
+      MVP
     </div>
 
   </div>
@@ -2749,7 +2989,8 @@
       28px
       28px
       38px
-      42px;
+      42px
+      40px;
     gap:4px;
     padding:12px;
     background:#111;
@@ -2823,6 +3064,13 @@
 
     <div>
       ${promedio}
+    </div>
+
+    <div style="
+      text-align:center;
+      font-weight:900;
+    ">
+      ${p.mvps || 0}
     </div>
 
   </div>
