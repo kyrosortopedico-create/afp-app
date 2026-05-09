@@ -2631,14 +2631,14 @@
   <div style="
     display:grid;
     grid-template-columns:
-      45px
-      1.8fr
-      50px
-      40px
-      40px
-      50px
-      65px;
-    gap:8px;
+      42px
+      minmax(110px, 1fr)
+      28px
+      28px
+      28px
+      38px
+      42px;
+    gap:4px;
     padding:12px;
     background:#111;
     border-left:4px solid ${p.color || "#fff"};
@@ -2646,12 +2646,12 @@
     margin-bottom:6px;
     align-items:center;
     text-align:left;
-    font-size:13px;
+    font-size:12px;
   ">
 
     <div style="
       font-weight:900;
-      font-size:14px;
+      font-size:13px;
     ">
       ${index === 0
             ? "🥇"
