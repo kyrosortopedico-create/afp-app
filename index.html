@@ -2610,67 +2610,24 @@
 
       ranking.forEach((p, index) => {
 
+        let promedio = 0;
+
+        if (tipo === "anual") {
+          promedio =
+            (p.puntos / mesesTotales).toFixed(1);
+        }
+
+        else if (tipo === "mensual") {
+          promedio =
+            (p.puntos / semanasTotales).toFixed(1);
+        }
+
+        else {
+          promedio =
+            (p.puntos / diasTotales).toFixed(1);
+        }
+
         html += `
-<div style="
-  display:grid;
-  grid-template-columns:
-    45px
-    1.8fr
-    50px
-    40px
-    40px
-    50px
-    65px;
-  gap:8px;
-  padding:10px 12px;
-  background:#111;
-  border:1px solid #222;
-  border-radius:12px;
-  margin-bottom:8px;
-  font-size:12px;
-  font-weight:700;
-  color:#777;
-  align-items:center;
-">
-
-  <div>TOP</div>
-  <div>COMPETIDOR</div>
-  <div>CC</div>
-  <div>G</div>
-  <div>D</div>
-  <div>P</div>
-  <div>
-    ${tipo === "anual"
-            ? "PxA"
-            : tipo === "mensual"
-              ? "PxM"
-              : "PxS"
-          }
-  </div>
-
-</div>
-`;
-
-        ranking.forEach((p, index) => {
-
-          let promedio = 0;
-
-          if (tipo === "anual") {
-            promedio =
-              (p.puntos / mesesTotales).toFixed(1);
-          }
-
-          else if (tipo === "mensual") {
-            promedio =
-              (p.puntos / semanasTotales).toFixed(1);
-          }
-
-          else {
-            promedio =
-              (p.puntos / diasTotales).toFixed(1);
-          }
-
-          html += `
   <div style="
     display:grid;
     grid-template-columns:
@@ -2697,13 +2654,13 @@
       font-size:14px;
     ">
       ${index === 0
-              ? "🥇"
-              : index === 1
-                ? "🥈"
-                : index === 2
-                  ? "🥉"
-                  : `#${index + 1}`
-            }
+            ? "🥇"
+            : index === 1
+              ? "🥈"
+              : index === 2
+                ? "🥉"
+                : `#${index + 1}`
+          }
     </div>
 
     <div style="
@@ -2758,9 +2715,9 @@
 
   </div>
   `;
-        });
+      });
 
-        html += `
+      html += `
     <button onclick="cambiarPantalla('eventos')" style="
       width:100%;
       padding:12px;
@@ -2774,8 +2731,8 @@
     </button>
   `;
 
-        cambiarContenidoConAnimacion(html, "adelante");
-      }
+      cambiarContenidoConAnimacion(html, "adelante");
+    }
 
   </script>
 
