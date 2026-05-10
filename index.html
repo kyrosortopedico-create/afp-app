@@ -981,6 +981,21 @@
       const [y, m, d] = fecha.split("-");
 
       const hoy = new Date();
+      const evento = new Date(y, m - 1, d);
+
+      hoy.setHours(0, 0, 0, 0);
+      evento.setHours(0, 0, 0, 0);
+
+      return evento >= hoy;
+    }
+
+    function esPlanillaActiva(fecha) {
+
+      if (!fecha) return false;
+
+      const [y, m, d] = fecha.split("-");
+
+      const hoy = new Date();
 
       const evento = new Date(y, m - 1, d);
 
@@ -1238,8 +1253,7 @@
 
         if (
           e.creadorId === auth.currentUser.uid &&
-          esEventoActivo(e.fecha)
-        ) {
+          esPlanillaActiva(e.fecha)        ) {
           misEventos.push(e);
         }
 
