@@ -144,7 +144,7 @@
     window.seleccionarMVP = seleccionarMVP;
     window.filtrarMVP = filtrarMVP;
     window.confirmarMVP = confirmarMVP;
-    window.abrirMejoresPuntuaciones = abrirMejoresPuntuaciones;
+    window.abrirMejoresPuntuaciones = () => { };
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -3189,6 +3189,14 @@
   `;
 
       cambiarContenidoConAnimacion(html, "adelante");
+    }
+
+    function abrirMejoresPuntuaciones() {
+
+      mostrarNotificacion(
+        "Próximamente"
+      );
+
     }
 
   </script>
