@@ -981,12 +981,20 @@
       const [y, m, d] = fecha.split("-");
 
       const hoy = new Date();
-      const evento = new Date(y, m - 1, d); // 🔥 LOCAL
 
-      hoy.setHours(0, 0, 0, 0);
+      const evento = new Date(y, m - 1, d);
+
       evento.setHours(0, 0, 0, 0);
 
-      return evento >= hoy;
+      const vencimiento = new Date(evento);
+
+      vencimiento.setDate(
+        vencimiento.getDate() + 7
+      );
+
+      hoy.setHours(0, 0, 0, 0);
+
+      return hoy <= vencimiento;
     }
 
     function clickEvento(el, evento) {
@@ -1268,6 +1276,7 @@
           padding:14px;
           margin-bottom:12px;
           text-align:left;
+          position:relative;
           cursor:pointer;
         ">
 
@@ -1295,6 +1304,20 @@
           ">
             ${formatearFecha(e.fecha)} • ${e.modalidad}
           </div>
+          <div style="
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:#1a1a1a;
+  border:1px solid #333;
+  border-radius:999px;
+  padding:4px 8px;
+  font-size:10px;
+  font-weight:900;
+  color:#1eff8a;
+">
+  ${obtenerTiempoRestantePlanilla(e.fecha)}
+</div>
 
         </div>
       `;
@@ -2610,6 +2633,46 @@
       }
     }
 
+    function obtenerTiempoRestantePlanilla(fecha) {
+
+      const [y, m, d] = fecha.split("-");
+
+      const evento = new Date(y, m - 1, d);
+
+      evento.setHours(0, 0, 0, 0);
+
+      const vencimiento = new Date(evento);
+
+      vencimiento.setDate(
+        vencimiento.getDate() + 7
+      );
+
+      const ahora = new Date();
+
+      const diferencia =
+        vencimiento - ahora;
+
+      const dias = Math.floor(
+        diferencia / (1000 * 60 * 60 * 24)
+      );
+
+      const horas = Math.floor(
+        (
+          diferencia % (1000 * 60 * 60 * 24)
+        ) / (1000 * 60 * 60)
+      );
+
+      if (dias <= 0 && horas <= 0) {
+        return "FINALIZA HOY";
+      }
+
+      if (dias <= 0) {
+        return horas + "H";
+      }
+
+      return dias + "D";
+    }
+
     function mostrarNotificacion(texto) {
 
       const notif = document.createElement("div");
@@ -2868,14 +2931,14 @@
   <div style="
     display:grid;
     grid-template-columns:
-      34px
-      minmax(78px, 1fr)
-      22px
-      22px
-      22px
-      30px
-      34px
-      28px;
+      28px
+      minmax(58px, 1fr)
+      20px
+      20px
+      20px
+      24px
+      28px
+      24px;
     gap:4px;
     padding:0 12px 6px 12px;
     margin-top:2px;
@@ -2983,14 +3046,14 @@
   <div style="
     display:grid;
     grid-template-columns:
-      34px
-      minmax(78px, 1fr)
-      22px
-      22px
-      22px
-      30px
-      34px
-      28px;
+      28px
+      minmax(58px, 1fr)
+      20px
+      20px
+      20px
+      24px
+      28px
+      24px;
     gap:3px;
     padding:10px 8px;
     background:#111;
