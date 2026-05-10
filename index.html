@@ -144,6 +144,7 @@
     window.seleccionarMVP = seleccionarMVP;
     window.filtrarMVP = filtrarMVP;
     window.confirmarMVP = confirmarMVP;
+    window.abrirMejoresPuntuaciones = abrirMejoresPuntuaciones;
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -1253,7 +1254,7 @@
 
         if (
           e.creadorId === auth.currentUser.uid &&
-          esPlanillaActiva(e.fecha)        ) {
+          esPlanillaActiva(e.fecha)) {
           misEventos.push(e);
         }
 
@@ -2502,6 +2503,70 @@
       return tablas[nivel]?.[posicion] || 0;
     }
 
+    async function guardarRecordHistorico(
+      nombre,
+      puntos,
+      competencias,
+      timestamp
+    ) {
+
+      const fecha = new Date(timestamp);
+
+      const semana = obtenerNumeroSemana(fecha);
+
+      const mes = fecha.getMonth() + 1;
+
+      const anio = fecha.getFullYear();
+
+      const promedioSemana =
+        (puntos / 7).toFixed(1);
+
+      const promedioMes =
+        (puntos / 30).toFixed(1);
+
+      const promedioAnio =
+        (puntos / 365).toFixed(1);
+
+      await addDoc(
+        collection(db, "recordsHistoricos"),
+        {
+          nombre,
+
+          puntos,
+
+          competencias,
+
+          semana,
+          mes,
+          anio,
+
+          promedioSemana,
+          promedioMes,
+          promedioAnio,
+
+          timestamp
+        }
+      );
+    }
+
+    function obtenerNumeroSemana(fecha) {
+
+      const inicioAnio = new Date(
+        fecha.getFullYear(),
+        0,
+        1
+      );
+
+      const dias = Math.floor(
+        (fecha - inicioAnio)
+        / (24 * 60 * 60 * 1000)
+      );
+
+      return Math.ceil(
+        (dias + inicioAnio.getDay() + 1) / 7
+      );
+    }
+
     async function guardarRanking(
       participante,
       posicion,
@@ -2608,6 +2673,13 @@
             }
 
           });
+
+          await guardarRecordHistorico(
+            nombre,
+            (data.puntos || 0) + puntos,
+            (data.competencias || 0) + 1,
+            Date.now()
+          );
 
           await updateDoc(docActual.ref, {
 
@@ -2863,9 +2935,10 @@
 
     <div style="
       display:flex;
-      gap:6px;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
       margin-bottom:10px;
-      justify-content:flex-start;
       width:100%;
     ">
 
@@ -2925,6 +2998,22 @@
         `).join("")}
 
       </select>
+
+    <div
+      onclick="abrirMejoresPuntuaciones()"
+      style="
+        padding:7px 10px;
+        background:#111;
+        border:1px solid #222;
+        border-radius:12px;
+        font-size:12px;
+        font-weight:800;
+        white-space:nowrap;
+        cursor:pointer;
+      "
+    >
+      Mejores Puntuaciones
+    </div>
 
     </div>
   `;
