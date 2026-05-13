@@ -873,7 +873,7 @@
       if (competencia === "Rappandemia") color = "#5F0394";
       if (competencia === "Homies") color = "#0DBFA1";
       if (competencia === "La Casa del Free") color = "#F2DE6F";
-      if (competencia === "Wasted") color = "#212121";
+      if (competencia === "Wasted") color = "#969692";
       if (competencia === "RP") color = "#1064AD";
       if (competencia === "Sin Korte") color = "#FF0000";
       if (competencia === "Código Verde") color = "#00B300";
@@ -3062,6 +3062,74 @@
       const mesesTotales =
         diasTotales / 30;
 
+      html += `
+        <div style="
+          display:grid;
+          grid-template-columns:
+            34px
+            minmax(0, 1fr)
+            24px
+            24px
+            24px
+            32px
+            42px
+            30px;
+          gap:6px;
+          padding:0 10px 8px 10px;
+          font-size:10px;
+          color:#666;
+          font-weight:900;
+          text-transform:uppercase;
+          align-items:center;
+        ">
+
+          <div>P</div>
+
+          <div style="
+            text-align:left;
+          ">
+            Competidor
+          </div>
+
+          <div style="
+            text-align:right;
+          ">
+            CC
+          </div>
+
+          <div style="
+            text-align:right;
+          ">
+            G
+          </div>
+
+          <div style="
+            text-align:right;
+          ">
+            D
+          </div>
+
+          <div style="
+            text-align:right;
+          ">
+            P
+          </div>
+
+          <div style="
+            text-align:right;
+          ">
+            ${promedioModo}
+          </div>
+
+          <div style="
+            text-align:right;
+          ">
+            MVP
+          </div>
+
+        </div>
+      `;
+
       ranking.forEach((p, index) => {
 
         let promedio = 0;
@@ -3082,17 +3150,17 @@
         }
 
         html += `
-      <div style="
-        display:grid;
-        grid-template-columns:
-          40px
-          1fr
-          28px
-          28px
-          28px
-          40px
-          50px
-          35px;
+  <div style="
+    display:grid;
+    grid-template-columns:
+      34px
+      minmax(0, 1fr)
+      24px
+      24px
+      24px
+      32px
+      42px
+      30px;
         gap:6px;
         align-items:center;
         background:#111;
@@ -3108,13 +3176,17 @@
           ${index + 1}
         </div>
 
-        <div>
+        <div style="
+          min-width:0;
+          text-align:left;
+        ">
 
           <div style="
             color:${p.color || "#fff"};
             font-weight:900;
             overflow:hidden;
             text-overflow:ellipsis;
+            white-space:nowrap;
           ">
             ${p.nombre || ""}
           </div>
@@ -3123,39 +3195,49 @@
             color:#666;
             font-size:10px;
             margin-top:2px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
           ">
             ${p.competencia || ""}
           </div>
 
         </div>
 
-        <div style="text-align:center;">
+        <div style="
+          text-align:right;
+          justify-self:end;
+        ">
           ${p.competencias || 0}
         </div>
 
         <div style="
-          text-align:center;
+          text-align:right;
+          justify-self:end;
           color:#1eff8a;
         ">
           ${p.victorias || 0}
         </div>
 
         <div style="
-          text-align:center;
+          text-align:right;
+          justify-self:end;
           color:#ff5c5c;
         ">
           ${p.derrotas || 0}
         </div>
 
         <div style="
-          text-align:center;
+          text-align:right;
+          justify-self:end;
           font-weight:900;
         ">
           ${Math.round(p.puntos || 0)}
         </div>
 
         <div style="
-          text-align:center;
+          text-align:right;
+          justify-self:end;
           color:${p.color || "#fff"};
           font-weight:900;
         ">
@@ -3163,7 +3245,8 @@
         </div>
 
         <div style="
-          text-align:center;
+          text-align:right;
+          justify-self:end;
           color:#ffd000;
           font-weight:900;
         ">
