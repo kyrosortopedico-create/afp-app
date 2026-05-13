@@ -104,6 +104,40 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    window.onerror = function (
+      mensaje,
+      archivo,
+      linea,
+      columna,
+      error
+    ) {
+
+      console.error(
+        "ERROR GLOBAL:",
+        error
+      );
+
+      mostrarNotificacion(
+        "Ocurrió un error inesperado"
+      );
+
+    };
+
+    window.addEventListener(
+      "unhandledrejection",
+      event => {
+
+        console.error(
+          "PROMISE ERROR:",
+          event.reason
+        );
+
+        mostrarNotificacion(
+          "Error de conexión o carga"
+        );
+
+      }
+    );
     const messaging = getMessaging(app);
 
     const contenido = document.getElementById("contenido");
@@ -146,6 +180,15 @@
     window.confirmarMVP = confirmarMVP;
     window.abrirMejoresPuntuaciones = () => { };
 
+    window.loaderTimeout = setTimeout(() => {
+
+      loader.style.display = "none";
+
+      mostrarNotificacion(
+        "La carga demoró demasiado"
+      );
+
+    }, 8000);
     onAuthStateChanged(auth, async (user) => {
 
       try {
@@ -198,6 +241,7 @@
       }
 
       // 🔥 ESTO SIEMPRE SE EJECUTA
+      clearTimeout(window.loaderTimeout);
       loader.style.display = "none";
       header.style.display = "flex";
       contenido.style.display = "block";
@@ -472,31 +516,33 @@
 
     async function cargarEventos() {
 
-      const querySnapshot = await getDocs(collection(db, "eventos"));
+      try {
 
+        const querySnapshot = await getDocs(
+          collection(db, "eventos")
+        );
 
+        eventos = [];
 
-      eventos = [];
-
-      querySnapshot.forEach(docSnap => {
-        eventos.push({
-          id: docSnap.id,
-          ...docSnap.data()
+        querySnapshot.forEach((docSnap) => {
+          eventos.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
         });
-      });
 
-      eventos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-      eventos = eventos.filter(e => esEventoActivo(e.fecha));
+        eventos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+        eventos = eventos.filter(e => esEventoActivo(e.fecha));
 
-      let html = "<h2>Eventos</h2>";
+        let html = "<h2>Eventos</h2>";
 
-      if (eventos.length === 0) {
-        html += "<p>No hay eventos todavía</p>";
-      }
+        if (eventos.length === 0) {
+          html += "<p>No hay eventos todavía</p>";
+        }
 
-      eventos.forEach((e, i) => {
+        eventos.forEach((e, i) => {
 
-        html += `
+          html += `
     <div data-id="${e.id}" class="eventoCard" style="
       background:#151515;
       border:1px solid #242424;
@@ -594,9 +640,22 @@
     </div>
   `;
 
-      });
+        });
 
-      contenido.innerHTML = html;
+        contenido.innerHTML = html;
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+        mostrarNotificacion(
+          "Error cargando eventos"
+        );
+
+      }
+
     }
 
     function pantallaCrearEvento() {
@@ -2573,197 +2632,209 @@
       victorias,
       derrotas
     ) {
+      try {
 
-      if (!eventoPlanillaActual) return;
+        if (!eventoPlanillaActual) return;
 
-      const nivel = obtenerNivelCompetencia(
-        eventoPlanillaActual.competencia
-      );
-
-      const puntos = obtenerPuntos(
-        nivel,
-        posicion
-      );
-
-      const fecha = new Date()
-        .toISOString()
-        .split("T")[0];
-
-      for (const nombre of participante.integrantes) {
-
-        const q = query(
-          collection(db, "ranking"),
-          where("nombre", "==", nombre)
+        const nivel = obtenerNivelCompetencia(
+          eventoPlanillaActual.competencia
         );
 
-        const snap = await getDocs(q);
+        const puntos = obtenerPuntos(
+          nivel,
+          posicion
+        );
 
-        // NO EXISTE
-        if (snap.empty) {
+        const fecha = new Date()
+          .toISOString()
+          .split("T")[0];
 
-          await addDoc(collection(db, "ranking"), {
+        for (const nombre of participante.integrantes) {
 
-            nombre,
-
-            puntos,
-            puntosPorCompetencia: {
-              [eventoPlanillaActual.competencia]: puntos
-            },
-
-            victorias,
-
-            derrotas,
-
-            competencias: 1,
-
-            color:
-              eventoPlanillaActual.color,
-
-            competencia:
-              eventoPlanillaActual.competencia,
-
-            nivel,
-
-            posicion,
-
-            modalidad:
-              eventoPlanillaActual.modalidad,
-
-            fecha,
-
-            timestamp: Date.now(),
-
-            mvps: 0
-          });
-
-        }
-
-        // YA EXISTE
-        else {
-
-          const docActual = snap.docs[0];
-
-          const data = docActual.data();
-          let puntosPorCompetencia =
-            data.puntosPorCompetencia || {};
-
-          puntosPorCompetencia[
-            eventoPlanillaActual.competencia
-          ] =
-            (
-              puntosPorCompetencia[
-              eventoPlanillaActual.competencia
-              ] || 0
-            )
-            + puntos;
-
-          let competenciaDominante =
-            eventoPlanillaActual.competencia;
-
-          let maxPuntos = 0;
-
-          Object.entries(
-            puntosPorCompetencia
-          ).forEach(([comp, pts]) => {
-
-            if (pts > maxPuntos) {
-
-              maxPuntos = pts;
-              competenciaDominante = comp;
-            }
-
-          });
-
-          await guardarRecordHistorico(
-            nombre,
-            (data.puntos || 0) + puntos,
-            (data.competencias || 0) + 1,
-            Date.now()
+          const q = query(
+            collection(db, "ranking"),
+            where("nombre", "==", nombre)
           );
 
-          await updateDoc(docActual.ref, {
+          const snap = await getDocs(q);
 
-            puntos:
+          // NO EXISTE
+          if (snap.empty) {
+
+            await addDoc(collection(db, "ranking"), {
+
+              nombre,
+
+              puntos,
+              puntosPorCompetencia: {
+                [eventoPlanillaActual.competencia]: puntos
+              },
+
+              victorias,
+
+              derrotas,
+
+              competencias: 1,
+
+              color:
+                eventoPlanillaActual.color,
+
+              competencia:
+                eventoPlanillaActual.competencia,
+
+              nivel,
+
+              posicion,
+
+              modalidad:
+                eventoPlanillaActual.modalidad,
+
+              fecha,
+
+              timestamp: Date.now(),
+
+              mvps: 0
+            });
+
+          }
+
+          // YA EXISTE
+          else {
+
+            const docActual = snap.docs[0];
+
+            const data = docActual.data();
+            let puntosPorCompetencia =
+              data.puntosPorCompetencia || {};
+
+            puntosPorCompetencia[
+              eventoPlanillaActual.competencia
+            ] =
+              (
+                puntosPorCompetencia[
+                eventoPlanillaActual.competencia
+                ] || 0
+              )
+              + puntos;
+
+            let competenciaDominante =
+              eventoPlanillaActual.competencia;
+
+            let maxPuntos = 0;
+
+            Object.entries(
+              puntosPorCompetencia
+            ).forEach(([comp, pts]) => {
+
+              if (pts > maxPuntos) {
+
+                maxPuntos = pts;
+                competenciaDominante = comp;
+              }
+
+            });
+
+            await guardarRecordHistorico(
+              nombre,
               (data.puntos || 0) + puntos,
-
-            victorias:
-              (data.victorias || 0) + victorias,
-
-            derrotas:
-              (data.derrotas || 0) + derrotas,
-
-            competencias:
               (data.competencias || 0) + 1,
+              Date.now()
+            );
 
-            color:
-              obtenerColorCompetencia(
-                competenciaDominante
-              ),
+            await updateDoc(docActual.ref, {
 
-            competencia:
-              eventoPlanillaActual.competencia,
+              puntos:
+                (data.puntos || 0) + puntos,
 
-            nivel,
+              victorias:
+                (data.victorias || 0) + victorias,
 
-            posicion,
+              derrotas:
+                (data.derrotas || 0) + derrotas,
 
-            modalidad:
-              eventoPlanillaActual.modalidad,
+              competencias:
+                (data.competencias || 0) + 1,
 
-            fecha,
+              color:
+                obtenerColorCompetencia(
+                  competenciaDominante
+                ),
 
-            puntosPorCompetencia,
-            timestamp: Date.now()
-          });
+              competencia:
+                eventoPlanillaActual.competencia,
+
+              nivel,
+
+              posicion,
+
+              modalidad:
+                eventoPlanillaActual.modalidad,
+
+              fecha,
+
+              puntosPorCompetencia,
+              timestamp: Date.now()
+            });
+          }
         }
+              }
+
+      catch(error) {
+
+        console.error(error);
+
+        mostrarNotificacion(
+          "Error actualizando ranking"
+        );
+
       }
-    }
+      }
 
     function obtenerTiempoRestantePlanilla(fecha) {
 
-      const [y, m, d] = fecha.split("-");
+        const [y, m, d] = fecha.split("-");
 
-      const evento = new Date(y, m - 1, d);
+        const evento = new Date(y, m - 1, d);
 
-      evento.setHours(0, 0, 0, 0);
+        evento.setHours(0, 0, 0, 0);
 
-      const vencimiento = new Date(evento);
+        const vencimiento = new Date(evento);
 
-      vencimiento.setDate(
-        vencimiento.getDate() + 7
-      );
+        vencimiento.setDate(
+          vencimiento.getDate() + 7
+        );
 
-      const ahora = new Date();
+        const ahora = new Date();
 
-      const diferencia =
-        vencimiento - ahora;
+        const diferencia =
+          vencimiento - ahora;
 
-      const dias = Math.floor(
-        diferencia / (1000 * 60 * 60 * 24)
-      );
+        const dias = Math.floor(
+          diferencia / (1000 * 60 * 60 * 24)
+        );
 
-      const horas = Math.floor(
-        (
-          diferencia % (1000 * 60 * 60 * 24)
-        ) / (1000 * 60 * 60)
-      );
+        const horas = Math.floor(
+          (
+            diferencia % (1000 * 60 * 60 * 24)
+          ) / (1000 * 60 * 60)
+        );
 
-      if (dias <= 0 && horas <= 0) {
-        return "FINALIZA HOY";
+        if (dias <= 0 && horas <= 0) {
+          return "FINALIZA HOY";
+        }
+
+        if (dias <= 0) {
+          return horas + "H";
+        }
+
+        return dias + "D";
       }
 
-      if (dias <= 0) {
-        return horas + "H";
-      }
+      function mostrarNotificacion(texto) {
 
-      return dias + "D";
-    }
+        const notif = document.createElement("div");
 
-    function mostrarNotificacion(texto) {
-
-      const notif = document.createElement("div");
-
-      notif.style = `
+        notif.style = `
     position:fixed;
     bottom:110px;
     left:50%;
@@ -2780,160 +2851,162 @@
     box-shadow:0 6px 20px rgba(0,0,0,0.6);
   `;
 
-      notif.innerText = texto;
+        notif.innerText = texto;
 
-      document.body.appendChild(notif);
+        document.body.appendChild(notif);
 
-      // entrada
-      setTimeout(() => {
-        notif.style.opacity = "1";
-        notif.style.transform = "translateX(-50%) translateY(0)";
-      }, 10);
+        // entrada
+        setTimeout(() => {
+          notif.style.opacity = "1";
+          notif.style.transform = "translateX(-50%) translateY(0)";
+        }, 10);
 
-      // salida
-      setTimeout(() => {
-        notif.style.opacity = "0";
-        notif.style.transform = "translateX(-50%) translateY(20px)";
-      }, 2000);
+        // salida
+        setTimeout(() => {
+          notif.style.opacity = "0";
+          notif.style.transform = "translateX(-50%) translateY(20px)";
+        }, 2000);
 
-      // eliminar
-      setTimeout(() => {
-        notif.remove();
-      }, 2500);
-    }
+        // eliminar
+        setTimeout(() => {
+          notif.remove();
+        }, 2500);
+      }
 
-    async function abrirRanking(tipo = "anual", promedioModo = null) {
+      async function abrirRanking(tipo = "anual", promedioModo = null) {
 
-      const snapshot = await getDocs(
-        collection(db, "ranking")
-      );
+        try {
 
-      let ranking = [];
+          const snapshot = await getDocs(
+            collection(db, "ranking")
+          );
 
-      const ahora = new Date();
+          let ranking = [];
 
-      const inicioSemana = new Date(ahora);
-      inicioSemana.setDate(
-        ahora.getDate() - ahora.getDay()
-      );
+          const ahora = new Date();
 
-      const inicioMes = new Date(
-        ahora.getFullYear(),
-        ahora.getMonth(),
-        1
-      );
+          const inicioSemana = new Date(ahora);
+          inicioSemana.setDate(
+            ahora.getDate() - ahora.getDay()
+          );
 
-      const inicioAnio = new Date(
-        ahora.getFullYear(),
-        0,
-        1
-      );
+          const inicioMes = new Date(
+            ahora.getFullYear(),
+            ahora.getMonth(),
+            1
+          );
 
-      snapshot.forEach(docSnap => {
+          const inicioAnio = new Date(
+            ahora.getFullYear(),
+            0,
+            1
+          );
 
-        const data = docSnap.data();
+          snapshot.forEach(docSnap => {
 
-        const fechaJugador =
-          new Date(data.timestamp);
+            const data = docSnap.data();
 
-        if (tipo === "semanal") {
+            const fechaJugador =
+              new Date(data.timestamp);
 
-          if (fechaJugador >= inicioSemana) {
-            ranking.push(data);
+            if (tipo === "semanal") {
+
+              if (fechaJugador >= inicioSemana) {
+                ranking.push(data);
+              }
+
+            }
+
+            else if (tipo === "mensual") {
+
+              if (fechaJugador >= inicioMes) {
+                ranking.push(data);
+              }
+
+            }
+
+            else {
+
+              if (fechaJugador >= inicioAnio) {
+                ranking.push(data);
+              }
+
+            }
+
+          });
+
+          let rankingAgrupado = {};
+
+          ranking.forEach(p => {
+
+            if (!rankingAgrupado[p.nombre]) {
+
+              rankingAgrupado[p.nombre] = {
+                ...p
+              };
+
+            } else {
+
+              rankingAgrupado[p.nombre].puntos +=
+                p.puntos || 0;
+
+              rankingAgrupado[p.nombre].victorias +=
+                p.victorias || 0;
+
+              rankingAgrupado[p.nombre].derrotas +=
+                p.derrotas || 0;
+
+              rankingAgrupado[p.nombre].competencias +=
+                p.competencias || 0;
+
+              rankingAgrupado[p.nombre].mvps +=
+                p.mvps || 0;
+            }
+
+          });
+
+          ranking = Object.values(rankingAgrupado);
+
+          ranking.sort((a, b) => b.puntos - a.puntos);
+
+          if (!promedioModo) {
+
+            if (tipo === "anual") {
+              promedioModo = "PxM";
+            }
+
+            else if (tipo === "mensual") {
+              promedioModo = "PxS";
+            }
+
+            else {
+              promedioModo = "PxD";
+            }
+
           }
 
-        }
+          let opcionesPromedio = [];
 
-        else if (tipo === "mensual") {
-
-          if (fechaJugador >= inicioMes) {
-            ranking.push(data);
+          if (tipo === "anual") {
+            opcionesPromedio = ["PxM", "PxS", "PxD"];
           }
 
-        }
-
-        else {
-
-          if (fechaJugador >= inicioAnio) {
-            ranking.push(data);
+          else if (tipo === "mensual") {
+            opcionesPromedio = ["PxS", "PxD"];
           }
 
-        }
+          else {
+            opcionesPromedio = ["PxD"];
+          }
 
-      });
-
-      let rankingAgrupado = {};
-
-      ranking.forEach(p => {
-
-        if (!rankingAgrupado[p.nombre]) {
-
-          rankingAgrupado[p.nombre] = {
-            ...p
-          };
-
-        } else {
-
-          rankingAgrupado[p.nombre].puntos +=
-            p.puntos || 0;
-
-          rankingAgrupado[p.nombre].victorias +=
-            p.victorias || 0;
-
-          rankingAgrupado[p.nombre].derrotas +=
-            p.derrotas || 0;
-
-          rankingAgrupado[p.nombre].competencias +=
-            p.competencias || 0;
-
-          rankingAgrupado[p.nombre].mvps +=
-            p.mvps || 0;
-        }
-
-      });
-
-      ranking = Object.values(rankingAgrupado);
-
-      ranking.sort((a, b) => b.puntos - a.puntos);
-
-      if (!promedioModo) {
-
-        if (tipo === "anual") {
-          promedioModo = "PxM";
-        }
-
-        else if (tipo === "mensual") {
-          promedioModo = "PxS";
-        }
-
-        else {
-          promedioModo = "PxD";
-        }
-
-      }
-
-      let opcionesPromedio = [];
-
-      if (tipo === "anual") {
-        opcionesPromedio = ["PxM", "PxS", "PxD"];
-      }
-
-      else if (tipo === "mensual") {
-        opcionesPromedio = ["PxS", "PxD"];
-      }
-
-      else {
-        opcionesPromedio = ["PxD"];
-      }
-
-      let html = `
+          let html = `
     <h2>
       Ranking ${tipo === "anual"
-          ? "Anual"
-          : tipo === "mensual"
-            ? "Mensual"
-            : "Semanal"
-        }
+              ? "Anual"
+              : tipo === "mensual"
+                ? "Mensual"
+                : "Semanal"
+            }
     </h2>
 
     <div style="
@@ -3026,9 +3099,9 @@
     </div>
   `;
 
-      if (ranking.length === 0) {
+          if (ranking.length === 0) {
 
-        html += `
+            html += `
       <div style="
         color:#777;
         margin-top:20px;
@@ -3037,32 +3110,32 @@
       </div>
     `;
 
-        cambiarContenidoConAnimacion(html, "adelante");
-        return;
-      }
+            cambiarContenidoConAnimacion(html, "adelante");
+            return;
+          }
 
-      const inicioPeriodo =
-        tipo === "anual"
-          ? inicioAnio
-          : tipo === "mensual"
-            ? inicioMes
-            : inicioSemana;
+          const inicioPeriodo =
+            tipo === "anual"
+              ? inicioAnio
+              : tipo === "mensual"
+                ? inicioMes
+                : inicioSemana;
 
-      const diasTotales = Math.max(
-        1,
-        Math.floor(
-          (ahora - inicioPeriodo)
-          / (1000 * 60 * 60 * 24)
-        )
-      );
+          const diasTotales = Math.max(
+            1,
+            Math.floor(
+              (ahora - inicioPeriodo)
+              / (1000 * 60 * 60 * 24)
+            )
+          );
 
-      const semanasTotales =
-        diasTotales / 7;
+          const semanasTotales =
+            diasTotales / 7;
 
-      const mesesTotales =
-        diasTotales / 30;
+          const mesesTotales =
+            diasTotales / 30;
 
-      html += `
+          html += `
         <div style="
           display:grid;
           grid-template-columns:
@@ -3130,26 +3203,26 @@
         </div>
       `;
 
-      ranking.forEach((p, index) => {
+          ranking.forEach((p, index) => {
 
-        let promedio = 0;
+            let promedio = 0;
 
-        if (tipo === "anual") {
-          promedio =
-            (p.puntos / mesesTotales).toFixed(1);
-        }
+            if (tipo === "anual") {
+              promedio =
+                (p.puntos / mesesTotales).toFixed(1);
+            }
 
-        else if (tipo === "mensual") {
-          promedio =
-            (p.puntos / semanasTotales).toFixed(1);
-        }
+            else if (tipo === "mensual") {
+              promedio =
+                (p.puntos / semanasTotales).toFixed(1);
+            }
 
-        else {
-          promedio =
-            (p.puntos / diasTotales).toFixed(1);
-        }
+            else {
+              promedio =
+                (p.puntos / diasTotales).toFixed(1);
+            }
 
-        html += `
+            html += `
   <div style="
     display:grid;
     grid-template-columns:
@@ -3255,9 +3328,9 @@
 
       </div>
     `;
-      });
+          });
 
-      html += `
+          html += `
     <button onclick="cambiarPantalla('eventos')" style="
       width:100%;
       padding:12px;
@@ -3271,16 +3344,29 @@
     </button>
   `;
 
-      cambiarContenidoConAnimacion(html, "adelante");
-    }
+          cambiarContenidoConAnimacion(html, "adelante");
 
-    function abrirMejoresPuntuaciones() {
+        }
 
-      mostrarNotificacion(
-        "Próximamente"
-      );
+        catch (error) {
 
-    }
+          console.error(error);
+
+          mostrarNotificacion(
+            "Error cargando ranking"
+          );
+
+        }
+
+      }
+
+      function abrirMejoresPuntuaciones() {
+
+        mostrarNotificacion(
+          "Próximamente"
+        );
+
+      }
 
   </script>
 
